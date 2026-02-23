@@ -3,7 +3,7 @@
  * Plugin Name:       Cotizador de Equipos
  * Plugin URI:        https://tusitio.com/
  * Description:       Cotizador avanzado con reglas de precios, gamas y plazos para alquiler de equipos.
- * Version:           1.0.0
+ * Version:           1.1.0
  * Author:            Tu Nombre
  * Author URI:        https://tusitio.com/
  * Text Domain:       cotizador-equipos
@@ -19,7 +19,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Actualmente la versión del plugin.
  * Útil para limpiar la caché de hojas de estilo y scripts.
  */
-define( 'COTIZADOR_EQUIPOS_VERSION', '1.0.0' );
+define( 'COTIZADOR_EQUIPOS_VERSION', '1.1.0' );
 
 /**
  * El código que se ejecuta durante la activación del plugin.

@@ -5,7 +5,7 @@ class Cotizador_Equipos {
 	protected $version;
 
 	public function __construct() {
-		$this->version = '1.0.0';
+		$this->version = defined( 'COTIZADOR_EQUIPOS_VERSION' ) ? COTIZADOR_EQUIPOS_VERSION : '1.1.0';
 		$this->plugin_name = 'cotizador-equipos';
 
 		$this->load_dependencies();

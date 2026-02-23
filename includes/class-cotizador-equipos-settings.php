@@ -27,7 +27,7 @@ class Cotizador_Equipos_Settings {
 				'step2_subtitle'  => 'El chasis determina la durabilidad, ventilación y portabilidad del equipo.',
 				'step3_eyebrow'   => 'PASO 3 DE 4',
 				'step3_title'     => 'Elige el tiempo de alquiler',
-				'step3_subtitle'  => 'Selecciona la unidad y la cantidad de tiempo que necesitas.',
+				'step3_subtitle'  => 'Selecciona unidad y cantidad; calculamos el periodo exacto automáticamente.',
 				'step4_eyebrow'   => 'PASO 4 DE 4',
 				'step4_title'     => 'Tu cotización está lista',
 				'step4_subtitle'  => 'Revisa el resumen antes de solicitar contacto.',
@@ -39,6 +39,12 @@ class Cotizador_Equipos_Settings {
 				'price_label'     => 'CUOTA MENSUAL / LAPTOP',
 				'quantity_label'  => 'Cantidad de laptops',
 				'period_label'    => 'Duración del alquiler',
+				'whatsapp_label'  => 'Quiero hablar con un especialista ahora',
+				'whatsapp_desc'   => 'Si prefieres, te atendemos por WhatsApp y armamos la cotización contigo.',
+				'whatsapp_url'    => 'https://wa.me/',
+				'manual_link'     => '¿Ya conoces lo que quieres? Configúralo manualmente',
+				'manual_title'    => 'Configuración rápida',
+				'manual_apply'    => 'Aplicar e ir al resumen',
 			),
 			'processors'      => array(
 				array(
@@ -67,19 +73,40 @@ class Cotizador_Equipos_Settings {
 					'front_label' => 'Productividad constante para oficina',
 					'description' => 'Diseñada para jornadas intensas que necesitan una laptop que no se caliente ni se ralentice.',
 				),
+				array(
+					'id'          => 'alta',
+					'label'       => 'Gama alta',
+					'front_label' => 'Trabajo de campo y condiciones exigentes',
+					'description' => 'Equipos con protección reforzada para ambientes demandantes y uso intensivo.',
+				),
 			),
 			'periods'         => array(
 				array(
-					'id'          => 'dia',
-					'label'       => 'Día',
-					'front_label' => 'Días',
-					'description' => 'Precio base por día.',
+					'id'          => 'semana_1',
+					'label'       => '1 semana',
+					'front_label' => '1 semana',
+					'description' => 'Periodo corto para proyectos puntuales.',
+					'unit'        => 'semanas',
+					'min_value'   => 1,
+					'max_value'   => 1,
 				),
 				array(
-					'id'          => 'mes',
-					'label'       => 'Mes',
-					'front_label' => 'Meses',
-					'description' => 'Precio base por mes.',
+					'id'          => 'semanas_2_4',
+					'label'       => '2 a 4 semanas',
+					'front_label' => '2 a 4 semanas',
+					'description' => 'Plan temporal extendido por semanas.',
+					'unit'        => 'semanas',
+					'min_value'   => 2,
+					'max_value'   => 4,
+				),
+				array(
+					'id'          => 'meses_1_12',
+					'label'       => '1 a 12 meses',
+					'front_label' => '1 a 12 meses',
+					'description' => 'Plan mensual para contratos estables.',
+					'unit'        => 'meses',
+					'min_value'   => 1,
+					'max_value'   => 12,
 				),
 			),
 			'prices'          => array(),
@@ -130,7 +157,7 @@ class Cotizador_Equipos_Settings {
 			$defaults['gamas']
 		);
 
-		$settings['periods'] = self::sanitize_options_list(
+		$settings['periods'] = self::sanitize_periods(
 			isset( $raw['periods'] ) ? $raw['periods'] : array(),
 			'periodo',
 			$defaults['periods']
@@ -151,7 +178,14 @@ class Cotizador_Equipos_Settings {
 		$texts = array();
 
 		foreach ( $defaults as $key => $default_value ) {
-			$value = isset( $texts_raw[ $key ] ) ? sanitize_text_field( wp_unslash( $texts_raw[ $key ] ) ) : '';
+			if ( ! isset( $texts_raw[ $key ] ) ) {
+				$value = '';
+			} elseif ( 'whatsapp_url' === $key ) {
+				$value = esc_url_raw( wp_unslash( $texts_raw[ $key ] ) );
+			} else {
+				$value = sanitize_text_field( wp_unslash( $texts_raw[ $key ] ) );
+			}
+
 			if ( '' === $value ) {
 				$value = $default_value;
 			}
@@ -200,8 +234,84 @@ class Cotizador_Equipos_Settings {
 			$cleaned[] = array(
 				'id'          => $id,
 				'label'       => $label,
-				'front_label' => $front_label,
+				'front_label' => '' === $front_label ? $label : $front_label,
 				'description' => $description,
+			);
+		}
+
+		if ( empty( $cleaned ) ) {
+			return $fallback_items;
+		}
+
+		return $cleaned;
+	}
+
+	private static function sanitize_periods( $items_raw, $prefix, $fallback_items ) {
+		$items_raw       = is_array( $items_raw ) ? $items_raw : array();
+		$cleaned         = array();
+		$used_ids        = array();
+		$allowed_units   = array( 'dias', 'semanas', 'meses' );
+
+		foreach ( $items_raw as $index => $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$label = isset( $item['label'] ) ? sanitize_text_field( wp_unslash( $item['label'] ) ) : '';
+			if ( '' === $label ) {
+				continue;
+			}
+
+			$front_label = isset( $item['front_label'] ) ? sanitize_text_field( wp_unslash( $item['front_label'] ) ) : '';
+			$description = isset( $item['description'] ) ? sanitize_textarea_field( wp_unslash( $item['description'] ) ) : '';
+			$id          = isset( $item['id'] ) ? sanitize_key( wp_unslash( $item['id'] ) ) : '';
+			$unit        = isset( $item['unit'] ) ? sanitize_key( wp_unslash( $item['unit'] ) ) : 'meses';
+			$min_value   = isset( $item['min_value'] ) ? absint( $item['min_value'] ) : 1;
+			$max_raw     = isset( $item['max_value'] ) ? sanitize_text_field( wp_unslash( $item['max_value'] ) ) : '';
+
+			if ( '' === $id ) {
+				$id = sanitize_title( $label );
+			}
+
+			if ( '' === $id ) {
+				$id = $prefix . '_' . ( absint( $index ) + 1 );
+			}
+
+			$base_id = $id;
+			$suffix  = 2;
+			while ( isset( $used_ids[ $id ] ) ) {
+				$id = $base_id . '_' . $suffix;
+				++$suffix;
+			}
+			$used_ids[ $id ] = true;
+
+			if ( ! in_array( $unit, $allowed_units, true ) ) {
+				$unit = 'meses';
+			}
+
+			if ( $min_value < 1 ) {
+				$min_value = 1;
+			}
+
+			$max_value = '';
+			if ( '' !== $max_raw ) {
+				$max_value = absint( $max_raw );
+				if ( $max_value > 0 && $max_value < $min_value ) {
+					$max_value = $min_value;
+				}
+				if ( 0 === $max_value ) {
+					$max_value = '';
+				}
+			}
+
+			$cleaned[] = array(
+				'id'          => $id,
+				'label'       => $label,
+				'front_label' => '' === $front_label ? $label : $front_label,
+				'description' => $description,
+				'unit'        => $unit,
+				'min_value'   => $min_value,
+				'max_value'   => $max_value,
 			);
 		}
 
