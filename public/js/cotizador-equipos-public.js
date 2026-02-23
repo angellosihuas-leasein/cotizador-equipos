@@ -14,15 +14,14 @@
     this.root = root;
     this.config = this.normalizeConfig(config);
     this.state = { 
-        step: 1, 
+        step: 0, 
         processorId: null, 
         gamaId: null, 
         timeUnit: 'meses', 
         timeValue: 1, 
         quantity: 1,
-        selectedExtras: [],
-        isModalOpen: false,
-        isManualMode: false
+        selectedExtras: { ram: '', almacenamiento: '' },
+        isModalOpen: false
     };
   }
 
@@ -35,9 +34,7 @@
   CotizadorUI.prototype.bindEvents = function () {
     var self = this;
     
-    // Delegación de clics
     this.root.addEventListener("click", function (e) {
-      // Evitar que cierre si el click es dentro del popup. Cerrar si es en el overlay.
       if (e.target.classList.contains("ceq-modal-overlay")) {
           self.closeModal();
           return;
@@ -47,9 +44,20 @@
       if (!btn) return;
       var action = btn.getAttribute("data-action");
       
+      if (action === "start-smart") self.goToStep(1);
+      if (action === "go-manual") {
+          if(!self.state.processorId && self.config.processors.length) self.state.processorId = self.config.processors[0].id;
+          if(!self.state.gamaId && self.config.gamas.length) self.state.gamaId = self.config.gamas[0].id;
+          self.goToStep(5);
+      }
+
       if (action === "next" && self.canContinue()) self.goToStep(self.state.step + 1);
-      if (action === "back") self.goToStep(self.state.step - 1);
-      if (action === "restart") { self.state.step = 1; self.state.quantity = 1; self.state.timeValue = 1; self.state.selectedExtras = []; self.state.isManualMode = false; self.goToStep(1); }
+      if (action === "back") self.goToStep(self.state.step === 5 ? 0 : self.state.step - 1);
+      if (action === "restart") { 
+          self.state.step = 0; self.state.quantity = 1; self.state.timeValue = 1; 
+          self.state.selectedExtras = { ram: '', almacenamiento: '' };
+          self.goToStep(0); 
+      }
       
       if (action === "select-processor") { self.state.processorId = btn.getAttribute("data-value"); self.renderBody(); self.renderFooter(); }
       if (action === "select-gama") { self.state.gamaId = btn.getAttribute("data-value"); self.renderBody(); self.renderFooter(); }
@@ -62,33 +70,21 @@
       if (action === "qty-minus") { self.state.quantity = Math.max(1, self.state.quantity - parseInt(btn.getAttribute("data-amount"))); self.renderBody(); self.renderFooter(); }
       if (action === "qty-plus") { self.state.quantity = Math.min(999, self.state.quantity + parseInt(btn.getAttribute("data-amount"))); self.renderBody(); self.renderFooter(); }
 
-      if (action === "go-manual") {
-          self.state.isManualMode = true;
-          if(!self.state.processorId && self.config.processors.length) self.state.processorId = self.config.processors[0].id;
-          if(!self.state.gamaId && self.config.gamas.length) self.state.gamaId = self.config.gamas[0].id;
-          self.goToStep(5); // Paso manual
-      }
-
-      // Acciones del Modal
       if (action === "open-modal") { self.state.isModalOpen = true; self.renderModal(); }
       if (action === "close-modal") { self.closeModal(); }
     });
 
-    // Delegación de cambios (para dropdowns y checkboxes del modo manual)
     this.root.addEventListener("change", function(e) {
         var action = e.target.getAttribute("data-action");
         if (action === "change-proc") { self.state.processorId = e.target.value; self.renderBody(); self.renderFooter(); }
         if (action === "change-gama") { self.state.gamaId = e.target.value; self.renderBody(); self.renderFooter(); }
-        if (action === "toggle-extra-input") {
-            var extId = e.target.value;
-            var idx = self.state.selectedExtras.indexOf(extId);
-            if (e.target.checked && idx === -1) self.state.selectedExtras.push(extId);
-            else if (!e.target.checked && idx > -1) self.state.selectedExtras.splice(idx, 1);
+        if (action === "change-extra") {
+            var type = e.target.getAttribute("data-type");
+            self.state.selectedExtras[type] = e.target.value;
             self.renderBody(); self.renderFooter();
         }
     });
 
-    // Envío del formulario del modal
     this.root.addEventListener("submit", function(e) {
         if(e.target.id === "ceq-quote-form") {
             e.preventDefault();
@@ -118,7 +114,7 @@
     setTimeout(function() {
         self.state.isModalOpen = false;
         self.renderModal();
-    }, 280); // Transición alineada a CSS
+    }, 280); 
   };
 
   CotizadorUI.prototype.goToStep = function (step) {
@@ -143,13 +139,18 @@
   };
 
   CotizadorUI.prototype.renderHeader = function () {
+    if (this.state.step === 0) {
+        this.root.querySelector(".ceq-header").innerHTML = '';
+        return;
+    }
+
     var t = this.config.texts;
     var st = {
-      1: { eye: 'PASO 1 DE 4', title: t.step1_title, sub: 'Selecciona la potencia base para tu equipo.' },
-      2: { eye: 'PASO 2 DE 4', title: t.step2_title, sub: 'El chasis determina la durabilidad, ventilación y portabilidad del equipo.' },
-      3: { eye: 'PASO 3 DE 4', title: 'Configura tu requerimiento', sub: 'Calculamos el precio exacto basado en el tiempo de alquiler.' },
-      4: { eye: 'PASO 4 DE 4', title: '¡Excelente elección!', sub: 'Revisa el resumen y obtén tu cotización formal.' },
-      5: { eye: 'MODO MANUAL', title: 'Configuración Rápida', sub: 'Personaliza tu equipo, extras y tiempo al instante.' } // Nuevo Paso
+      1: { eye: t.step1_eyebrow, title: t.step1_title, sub: t.step1_subtitle },
+      2: { eye: t.step2_eyebrow, title: t.step2_title, sub: t.step2_subtitle },
+      3: { eye: t.step3_eyebrow, title: t.step3_title, sub: t.step3_subtitle },
+      4: { eye: t.step4_eyebrow, title: t.step4_title, sub: t.step4_subtitle },
+      5: { eye: 'MODO MANUAL', title: t.texts?.manual_title || 'Configuración Rápida', sub: 'Personaliza tu equipo, extras y tiempo al instante.' }
     }[this.state.step];
     
     this.root.querySelector(".ceq-header").innerHTML = 
@@ -163,13 +164,30 @@
   };
 
   CotizadorUI.prototype.getRadioSvg = function(isSelected) {
-      if(isSelected) return '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="#f97316" stroke-width="2" fill="#f97316"/><circle cx="12" cy="12" r="4" fill="white"/></svg>';
+      if(isSelected) return '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="#ea580c" stroke-width="2" fill="#ea580c"/><circle cx="12" cy="12" r="4" fill="white"/></svg>';
       return '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="#e5e7eb" stroke-width="2" fill="white"/></svg>';
   }
 
   CotizadorUI.prototype.renderBody = function () {
     var body = this.root.querySelector(".ceq-body");
     var self = this;
+    var t = this.config.texts;
+
+    // Paso 0: Bienvenida
+    if (this.state.step === 0) {
+        body.innerHTML = `
+            <div class="ceq-welcome-wrap">
+                <span class="ceq-eyebrow ceq-badge-eyebrow">${t.welcome_eyebrow || 'COTIZADOR DIGITAL'}</span>
+                <h1 class="ceq-title ceq-welcome-title">${t.welcome_title}</h1>
+                <p class="ceq-subtitle ceq-welcome-subtitle">${t.welcome_subtitle}</p>
+                <div class="ceq-welcome-actions">
+                    <button class="ceq-btn-primary" data-action="start-smart">${t.btn_smart || 'Iniciar cotización inteligente →'}</button>
+                    <button class="ceq-btn-outline" data-action="go-manual"><svg style="width:20px;height:20px;margin-right:8px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg> ${t.btn_manual || 'Configura aquí'}</button>
+                </div>
+            </div>
+        `;
+        return;
+    }
 
     // Pasos clásicos 1 y 2
     if (this.state.step === 1 || this.state.step === 2) {
@@ -178,12 +196,12 @@
       var action = this.state.step === 1 ? "select-processor" : "select-gama";
       
       var waBtn = this.state.step === 1 ? 
-        '<a class="ceq-whatsapp-cta" href="'+this.config.texts.whatsapp_url+'" target="_blank">' +
+        '<a class="ceq-whatsapp-cta" href="'+t.whatsapp_url+'" target="_blank">' +
         '<span class="ceq-wa-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></span>' +
-        '<span class="ceq-wa-text"><span class="ceq-wa-title">Quiero hablar con un especialista ahora</span><span class="ceq-wa-desc">Si prefieres, te atendemos por WhatsApp y armamos la cotización contigo.</span></span>' +
-        '<span style="color:#f97316; font-size:24px; font-weight:300;">→</span></a>' : '';
+        '<span class="ceq-wa-text"><span class="ceq-wa-title">'+ (t.whatsapp_label || 'Quiero hablar con un especialista') +'</span><span class="ceq-wa-desc">'+ (t.whatsapp_desc || '') +'</span></span>' +
+        '<span style="color:#ea580c; font-size:24px; font-weight:300;">→</span></a>' : '';
 
-      var manualLink = this.state.step === 1 ? '<div style="text-align:center; margin-top:24px;"><button type="button" class="ceq-btn-ghost" style="color:#f97316; font-size:15px; text-decoration:underline;" data-action="go-manual">' + (this.config.texts.manual_link || '¿Ya conoces lo que quieres? Configúralo manualmente') + '</button></div>' : '';
+      var manualLink = this.state.step === 1 ? '<div style="text-align:center; margin-top:24px;"><button type="button" class="ceq-btn-ghost" style="color:#ea580c; font-size:15px; text-decoration:underline;" data-action="go-manual">' + (t.manual_link || '¿Ya conoces lo que quieres? Configúralo manualmente') + '</button></div>' : '';
 
       var html = '<div class="ceq-options">';
       items.forEach(function (item, i) {
@@ -199,10 +217,13 @@
       return;
     }
 
+    var singleUnit = this.state.timeUnit === 'meses' ? 'mes' : 'semana';
+    var timeLabel = this.state.timeUnit === 'meses' ? 'MESES' : 'SEMANAS';
+
     // Paso 5: Modo Manual con Extras
     if (this.state.step === 5) {
       var pBaseManual = this.getBasePrice();
-      var tPriceManual = pBaseManual * this.state.quantity * this.state.timeValue;
+      var tPriceManualTotal = pBaseManual * this.state.quantity; // Sumamos la cuota total de TODAS las laptops para 1 mes
       
       var procsHtml = '<select class="ceq-form-input" data-action="change-proc">';
       this.config.processors.forEach(p => { procsHtml += `<option value="${p.id}" ${p.id===this.state.processorId?'selected':''}>${p.label}</option>`; });
@@ -212,22 +233,28 @@
       this.config.gamas.forEach(g => { gamasHtml += `<option value="${g.id}" ${g.id===this.state.gamaId?'selected':''}>${g.label}</option>`; });
       gamasHtml += '</select>';
 
+      var rams = this.config.extras.filter(e => e.type === 'ram');
+      var almacenamientos = this.config.extras.filter(e => e.type === 'almacenamiento');
+      
       var extrasHtml = '';
-      if (this.config.extras && this.config.extras.length > 0) {
-          extrasHtml = '<div class="ceq-box-title" style="margin-top:24px; margin-bottom:12px;">Extras y Adicionales</div><div style="display:grid; gap:12px;">';
-          this.config.extras.forEach(ext => {
-              var isChecked = this.state.selectedExtras.includes(ext.id);
-              extrasHtml += `
-              <label class="ceq-option ${isChecked ? 'is-selected' : ''}" style="padding:16px; cursor:pointer;">
-                  <input type="checkbox" style="display:none;" data-action="toggle-extra-input" value="${ext.id}" ${isChecked ? 'checked' : ''}>
-                  <span class="ceq-opt-main" style="display:flex; justify-content:space-between; width:100%; align-items:center;">
-                      <span style="font-weight:600; font-size:15px; color:#111827;">${ext.label}</span>
-                      <span style="color:#f97316; font-weight:700; font-size:14px;">+${this.config.currency_symbol}${ext.price}</span>
-                  </span>
-                  <span class="ceq-opt-radio" style="margin-left:16px;">${this.getRadioSvg(isChecked)}</span>
-              </label>`;
-          });
-          extrasHtml += '</div>';
+      if (rams.length > 0 || almacenamientos.length > 0) {
+          extrasHtml = '<div class="ceq-box-title" style="margin-top:24px; margin-bottom:12px;">Extras y Adicionales</div>';
+          
+          if (rams.length > 0) {
+              extrasHtml += `<div class="ceq-form-group"><label class="ceq-form-label">Memoria RAM</label><select class="ceq-form-input" data-action="change-extra" data-type="ram"><option value="">Base (Sin extra)</option>`;
+              rams.forEach(ext => {
+                  extrasHtml += `<option value="${ext.id}" ${this.state.selectedExtras.ram===ext.id?'selected':''}>${ext.label} (+${this.config.currency_symbol}${ext.price})</option>`;
+              });
+              extrasHtml += `</select></div>`;
+          }
+
+          if (almacenamientos.length > 0) {
+              extrasHtml += `<div class="ceq-form-group" style="margin-bottom:0;"><label class="ceq-form-label">Almacenamiento</label><select class="ceq-form-input" data-action="change-extra" data-type="almacenamiento"><option value="">Base (Sin extra)</option>`;
+              almacenamientos.forEach(ext => {
+                  extrasHtml += `<option value="${ext.id}" ${this.state.selectedExtras.almacenamiento===ext.id?'selected':''}>${ext.label} (+${this.config.currency_symbol}${ext.price})</option>`;
+              });
+              extrasHtml += `</select></div>`;
+          }
       }
 
       body.innerHTML = `
@@ -274,12 +301,14 @@
           <div class="ceq-layout-right">
               <div class="ceq-right-card">
                   <div class="ceq-circle">
-                      <span class="ceq-circle-lbl">CUOTA ${this.state.timeUnit.toUpperCase()}</span>
-                      <span class="ceq-circle-val">${this.config.currency_symbol}${Math.round(pBaseManual)}</span>
-                      <span class="ceq-circle-sub">/ ${this.state.timeUnit.replace(/s$/,'')} • laptop</span>
+                      <span class="ceq-circle-lbl">CUOTA ${timeLabel}</span>
+                      <span class="ceq-circle-val">${this.config.currency_symbol}${Math.round(tPriceManualTotal)}</span>
+                      <span class="ceq-circle-sub">${this.config.currency_symbol}${Math.round(pBase)} / ${singleUnit} • laptop</span>
                   </div>
-                  <div style="margin-top:16px; font-weight:700; color:#111827; font-size:16px;">
-                      Inversión Total: <span style="color:#f97316;">${this.config.currency_symbol}${Math.round(tPriceManual)}</span>
+                  <div class="ceq-feat-box">
+                      <span class="ceq-feat-eye">SISTEMA OPERATIVO</span>
+                      <span class="ceq-feat-title">WINDOWS PRO INCLUIDO</span>
+                      <span class="ceq-feat-sub">Precios no incluyen IGV</span>
                   </div>
                   <button class="ceq-btn-primary" style="width:100%; margin-top:24px;" data-action="open-modal">Solicitar Cotización</button>
               </div>
@@ -291,6 +320,7 @@
     // Paso 3
     if (this.state.step === 3) {
       var pBase = this.getBasePrice();
+      var tPriceTotal = pBase * this.state.quantity;
       var proc = this.config.processors.find(p => p.id === this.state.processorId);
       
       body.innerHTML = `
@@ -346,9 +376,9 @@
             <div class="ceq-layout-right">
                 <div class="ceq-right-card">
                     <div class="ceq-circle">
-                        <span class="ceq-circle-lbl">CUOTA ${this.state.timeUnit.toUpperCase()}</span>
-                        <span class="ceq-circle-val">${this.config.currency_symbol}${Math.round(pBase)}</span>
-                        <span class="ceq-circle-sub">/ ${this.state.timeUnit.replace(/s$/,'')} • laptop</span>
+                        <span class="ceq-circle-lbl">CUOTA ${timeLabel}</span>
+                        <span class="ceq-circle-val">${this.config.currency_symbol}${Math.round(tPriceTotal)}</span>
+                        <span class="ceq-circle-sub">${this.config.currency_symbol}${Math.round(pBase)} / ${singleUnit} • laptop</span>
                     </div>
                     <div class="ceq-feat-box">
                         <span class="ceq-feat-eye">SISTEMA OPERATIVO</span>
@@ -369,8 +399,8 @@
             <div class="ceq-layout-left">
                 <div class="ceq-box ceq-box-base" style="border-style:solid;">
                     <div class="ceq-box-eyebrow">RESUMEN DE COTIZACIÓN</div>
-                    <div class="ceq-box-title" style="font-size:32px; color:#f97316; margin:8px 0;">${this.config.currency_symbol}${Math.round(finalPrice)}</div>
-                    <div class="ceq-box-desc">Costo total estimado por el lote completo.</div>
+                    <div class="ceq-box-title" style="font-size:32px; color:#ea580c; margin:8px 0;">${this.config.currency_symbol}${Math.round(finalPrice)}</div>
+                    <div class="ceq-box-desc">Costo total estimado por el lote completo durante ${this.state.timeValue} ${this.state.timeUnit}.</div>
                 </div>
                 <div class="ceq-box" style="padding:16px 24px;">
                     <div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #f3f4f6;">
@@ -394,6 +424,12 @@
 
   CotizadorUI.prototype.renderFooter = function () {
     var footer = this.root.querySelector(".ceq-footer");
+    
+    if (this.state.step === 0) {
+        footer.innerHTML = '';
+        return;
+    }
+
     var restartBtn = '<button class="ceq-btn-ghost" data-action="restart"><svg style="width:20px;height:20px;margin-right:8px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Volver a empezar</button>';
     
     if (this.state.step === 4) {
@@ -401,11 +437,11 @@
       return;
     }
     if (this.state.step === 5) {
-      footer.innerHTML = restartBtn + '<div></div>'; // En el modo manual el botón está en la card derecha
+      footer.innerHTML = restartBtn + '<div></div>'; 
       return;
     }
 
-    var back = this.state.step > 1 ? '<button class="ceq-btn-ghost" data-action="back"><svg style="width:20px;height:20px;margin-right:8px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg> Volver</button>' : '<div></div>';
+    var back = '<button class="ceq-btn-ghost" data-action="back"><svg style="width:20px;height:20px;margin-right:8px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg> Volver</button>';
     footer.innerHTML = back + '<button class="ceq-btn-primary" data-action="next" ' + (this.canContinue()?'':'disabled') + '>' + (this.state.step===3 ? 'Ver mi solución →' : 'Continuar →') + '</button>';
   };
 
@@ -465,10 +501,12 @@
   CotizadorUI.prototype.getExtrasPrice = function () {
     var total = 0;
     var self = this;
-    this.state.selectedExtras.forEach(function(extId) {
-        var extra = self.config.extras.find(function(e){ return e.id === extId; });
-        if (extra) total += parseFloat(extra.price) || 0;
-    });
+    var extRam = self.config.extras.find(function(e){ return e.id === self.state.selectedExtras.ram; });
+    var extStorage = self.config.extras.find(function(e){ return e.id === self.state.selectedExtras.almacenamiento; });
+    
+    if (extRam) total += parseFloat(extRam.price) || 0;
+    if (extStorage) total += parseFloat(extStorage.price) || 0;
+    
     return total;
   };
 

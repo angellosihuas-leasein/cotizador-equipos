@@ -40,21 +40,29 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 		</div>
 
 		<div x-show="tab === 'textos'" style="display: none;">
-			<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 pr-2">
+			<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 pr-2 mb-6">
 				<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-					<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-5 text-slate-800 m-0">Textos Generales</h2>
+					<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-5 text-slate-800 m-0">Textos Pantalla Bienvenida</h2>
 					<div class="space-y-3">
-						<label class="block text-xs font-semibold text-slate-500">Botón WhatsApp (Arriba)</label>
-						<input type="text" x-model="formData.texts.whatsapp_label" class="w-full font-medium border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-orange-500">
-						<input type="text" x-model="formData.texts.whatsapp_desc" class="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-orange-500" placeholder="Subtítulo whatsapp">
-						<input type="text" x-model="formData.texts.whatsapp_url" class="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-orange-500" placeholder="Enlace wa.me/...">
+						<input type="text" x-model="formData.texts.welcome_eyebrow" class="w-full font-medium border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-orange-500" placeholder="Ej: COTIZADOR DIGITAL">
+						<label class="block text-xs font-semibold text-slate-500 mt-2">Título Principal (Permite HTML)</label>
+						<textarea x-model="formData.texts.welcome_title" class="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-orange-500" rows="3"></textarea>
+						<label class="block text-xs font-semibold text-slate-500 mt-2">Subtítulo (Permite HTML)</label>
+						<textarea x-model="formData.texts.welcome_subtitle" class="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-orange-500" rows="2"></textarea>
+						<input type="text" x-model="formData.texts.btn_smart" class="w-full font-medium border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-orange-500" placeholder="Botón primario">
+						<input type="text" x-model="formData.texts.btn_manual" class="w-full font-medium border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-orange-500" placeholder="Botón secundario">
 					</div>
 				</div>
 				<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-					<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-5 text-slate-800 m-0">Textos Paso 1 y 2</h2>
+					<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-5 text-slate-800 m-0">Textos Paso 1, 2 y WhatsApp</h2>
 					<div class="space-y-3">
+						<label class="block text-xs font-semibold text-slate-500">Títulos de pasos</label>
 						<input type="text" x-model="formData.texts.step1_title" class="w-full font-medium border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-orange-500" placeholder="Título Paso 1">
 						<input type="text" x-model="formData.texts.step2_title" class="w-full font-medium border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-orange-500" placeholder="Título Paso 2">
+						<label class="block text-xs font-semibold text-slate-500 mt-3">WhatsApp (Paso 1)</label>
+						<input type="text" x-model="formData.texts.whatsapp_label" class="w-full font-medium border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-orange-500" placeholder="Título botón">
+						<input type="text" x-model="formData.texts.whatsapp_desc" class="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-orange-500" placeholder="Subtítulo whatsapp">
+						<input type="text" x-model="formData.texts.whatsapp_url" class="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-orange-500" placeholder="Enlace wa.me/...">
 					</div>
 				</div>
 			</div>
@@ -62,7 +70,6 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 
 		<div x-show="tab === 'configuracion'" style="display: none;">
 			<div class="grid grid-cols-1 gap-6">
-				
 				<div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
 					<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
 						<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-5 text-slate-800 m-0">Opciones: Paso 1 (Procesador)</h2>
@@ -71,12 +78,12 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 								<div class="p-4 border border-slate-200 rounded-lg bg-slate-50">
 									<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
 										<div>
-											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Nombre interno (Backend)</label>
+											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Nombre interno</label>
 											<input type="text" x-model="proc.label" class="w-full font-medium border border-slate-200 rounded p-2 text-sm outline-none focus:border-orange-500" placeholder="Ej: Core i5">
 										</div>
 										<div>
-											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Título público (Frontend)</label>
-											<input type="text" x-model="proc.front_label" class="w-full font-medium border border-orange-200 bg-orange-50/30 text-orange-800 rounded p-2 text-sm outline-none focus:border-orange-500" placeholder="Ej: Aplicaciones estándar">
+											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Título público</label>
+											<input type="text" x-model="proc.front_label" class="w-full font-medium border border-orange-200 bg-orange-50/30 text-orange-800 rounded p-2 text-sm outline-none focus:border-orange-500">
 										</div>
 									</div>
 									<textarea x-model="proc.description" class="w-full border border-slate-200 rounded p-2 text-sm outline-none text-slate-500 mb-2" rows="2" placeholder="Descripción de la opción"></textarea>
@@ -94,12 +101,12 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 								<div class="p-4 border border-slate-200 rounded-lg bg-slate-50">
 									<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
 										<div>
-											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Nombre interno (Backend)</label>
+											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Nombre interno</label>
 											<input type="text" x-model="gama.label" class="w-full font-medium border border-slate-200 rounded p-2 text-sm outline-none focus:border-orange-500" placeholder="Ej: Gama base">
 										</div>
 										<div>
-											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Título público (Frontend)</label>
-											<input type="text" x-model="gama.front_label" class="w-full font-medium border border-orange-200 bg-orange-50/30 text-orange-800 rounded p-2 text-sm outline-none focus:border-orange-500" placeholder="Ej: Funcionalidad al mejor precio">
+											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Título público</label>
+											<input type="text" x-model="gama.front_label" class="w-full font-medium border border-orange-200 bg-orange-50/30 text-orange-800 rounded p-2 text-sm outline-none focus:border-orange-500">
 										</div>
 									</div>
 									<textarea x-model="gama.description" class="w-full border border-slate-200 rounded p-2 text-sm outline-none text-slate-500 mb-2" rows="2" placeholder="Descripción de la opción"></textarea>
@@ -111,14 +118,20 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 					</div>
 
 					<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 xl:col-span-2">
-						<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-5 text-slate-800 m-0">Extras / Adicionales Opcionales</h2>
-						<p class="text-sm text-slate-500 mb-4">Añade componentes o mejoras adicionales que el usuario podrá sumar a su cotización desde el "Modo Manual".</p>
+						<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-5 text-slate-800 m-0">Extras / Adicionales (Modo Manual)</h2>
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 							<template x-for="(extra, index) in formData.extras" :key="extra.id">
-								<div class="p-4 border border-slate-200 rounded-lg bg-slate-50">
-									<div class="grid grid-cols-1 xl:grid-cols-2 gap-3 mb-2">
+								<div class="p-4 border border-slate-200 rounded-lg bg-slate-50 relative">
+									<div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
 										<div>
-											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Nombre del extra</label>
+											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Tipo</label>
+											<select x-model="extra.type" class="w-full border border-slate-300 rounded p-2 text-sm outline-none focus:border-orange-500 bg-white">
+												<option value="ram">Memoria RAM</option>
+												<option value="almacenamiento">Almacenamiento</option>
+											</select>
+										</div>
+										<div>
+											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Nombre</label>
 											<input type="text" x-model="extra.label" class="w-full font-medium border border-slate-200 rounded p-2 text-sm outline-none focus:border-orange-500" placeholder="Ej: 8GB RAM Extra">
 										</div>
 										<div>
@@ -129,18 +142,16 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 											</div>
 										</div>
 									</div>
-									<div class="flex justify-end mt-2"><button type="button" @click="removeItem('extras', index)" class="text-xs text-red-500 font-semibold cursor-pointer border-none bg-transparent hover:underline">Eliminar Extra</button></div>
+									<div class="flex justify-end mt-2"><button type="button" @click="removeItem('extras', index)" class="text-xs text-red-500 font-semibold cursor-pointer border-none bg-transparent hover:underline">Eliminar</button></div>
 								</div>
 							</template>
 						</div>
 						<button type="button" @click="addItem('extras')" class="mt-4 text-sm font-medium text-orange-600 bg-white border border-orange-200 py-2 px-4 rounded-lg cursor-pointer hover:bg-orange-50">+ Añadir Extra</button>
 					</div>
-					</div>
+				</div>
 
 				<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
 					<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-4 text-slate-800 m-0">Reglas de Periodos de Alquiler</h2>
-					<p class="text-sm text-slate-500 mb-4">Define los rangos de tiempo. El cotizador evaluará lo que elija el usuario y aplicará la regla correspondiente.</p>
-
 					<div class="overflow-x-auto border border-slate-200 rounded-lg">
 						<table class="w-full text-sm text-left border-collapse bg-white">
 							<thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
@@ -189,8 +200,8 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 						<table class="w-full text-sm text-left border-collapse bg-white">
 							<thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
 								<tr>
-									<th class="py-3 px-4 font-semibold w-1/4">Procesador</th>
-									<th class="py-3 px-4 font-semibold w-1/4">Jornada</th>
+									<th class="py-3 px-4 font-semibold" style="width:12%;">Procesador</th>
+									<th class="py-3 px-4 font-semibold" style="width:12%;">Jornada</th>
 									<template x-for="periodo in formData.periods" :key="'head-' + periodo.id">
 										<th class="py-3 px-4 font-semibold text-center min-w-[140px]">
 											<div class="text-orange-600" x-text="periodo.label || 'Regla'"></div>
@@ -231,7 +242,6 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 			tab: 'configuracion',
 			initialSettings: <?php echo $settings_json; ?>,
 			simboloDivisa: 'S/.',
-			// Se agrego extras a la estructura de formData
 			formData: { currency_code: 'PEN', currency_symbol: 'S/.', texts: {}, processors: [], gamas: [], periods: [], extras: [], prices: {} },
 
 			init() {
@@ -241,7 +251,7 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 				this.formData.processors = this.normalizeItems(incoming.processors, 'proc');
 				this.formData.gamas = this.normalizeItems(incoming.gamas, 'gama');
 				this.formData.periods = this.normalizePeriods(incoming.periods);
-				this.formData.extras = this.normalizeExtras(incoming.extras); // Se inicializan los extras guardados
+				this.formData.extras = this.normalizeExtras(incoming.extras);
 				this.formData.prices = incoming.prices || {};
 				this.actualizarSimbolo();
 				this.normalizePrices();
@@ -272,6 +282,7 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 				const source = Array.isArray(rawItems) ? rawItems : [];
 				return source.map((item, idx) => ({
 					id: item.id || 'extra_' + (idx + 1),
+					type: ['ram', 'almacenamiento'].includes(item.type) ? item.type : 'ram',
 					label: item.label || '',
 					price: item.price || '0.00'
 				}));
@@ -289,7 +300,7 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 				if (type === 'periods') {
 					list.push({ id: id, label: '', unit: 'meses', min_value: 1, max_value: '' });
 				} else if (type === 'extras') {
-					list.push({ id: id, label: '', price: '0.00' });
+					list.push({ id: id, type: 'ram', label: '', price: '0.00' });
 				} else {
 					list.push({ id: id, label: '', front_label: '', description: '' });
 				}

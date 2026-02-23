@@ -19,6 +19,11 @@ class Cotizador_Equipos_Settings {
 			'currency_code'   => 'PEN',
 			'currency_symbol' => 'S/.',
 			'texts'           => array(
+				'welcome_eyebrow' => 'COTIZADOR DIGITAL',
+				'welcome_title'   => 'Cotiza el alquiler de laptops <span style="color:#ea580c;">para tu empresa</span> en segundos.',
+				'welcome_subtitle'=> 'Obtén precios al instante con nuestro cotizador digital o configura una propuesta técnica a medida.',
+				'btn_smart'       => 'Iniciar cotización inteligente →',
+				'btn_manual'      => 'Configura aquí',
 				'step1_eyebrow'   => 'PASO 1 DE 4',
 				'step1_title'     => '¿Qué aplicaciones vas a utilizar?',
 				'step1_subtitle'  => 'Elige la potencia que mejor se adapta a tus tareas habituales.',
@@ -47,74 +52,22 @@ class Cotizador_Equipos_Settings {
 				'manual_apply'    => 'Aplicar e ir al resumen',
 			),
 			'processors'      => array(
-				array(
-					'id'          => 'i5',
-					'label'       => 'Core i5',
-					'front_label' => 'Aplicaciones estándar',
-					'description' => 'Uso principalmente Office, correos, videollamadas y navegación fluida.',
-				),
-				array(
-					'id'          => 'i7',
-					'label'       => 'Core i7',
-					'front_label' => 'Software de alto rendimiento',
-					'description' => 'Para programación, análisis masivo de datos o procesos que requieren respuesta inmediata.',
-				),
+				array( 'id' => 'i5', 'label' => 'Core i5', 'front_label' => 'Aplicaciones estándar', 'description' => 'Uso principalmente Office, correos, videollamadas y navegación fluida.' ),
+				array( 'id' => 'i7', 'label' => 'Core i7', 'front_label' => 'Software de alto rendimiento', 'description' => 'Para programación, análisis masivo de datos o procesos que requieren respuesta inmediata.' ),
 			),
 			'gamas'           => array(
-				array(
-					'id'          => 'baja',
-					'label'       => 'Gama baja',
-					'front_label' => 'Funcionalidad al mejor precio',
-					'description' => 'Ideal para puestos administrativos en lugares fijos que buscan optimizar la inversión.',
-				),
-				array(
-					'id'          => 'media',
-					'label'       => 'Gama media',
-					'front_label' => 'Productividad constante para oficina',
-					'description' => 'Diseñada para jornadas intensas que necesitan una laptop que no se caliente ni se ralentice.',
-				),
-				array(
-					'id'          => 'alta',
-					'label'       => 'Gama alta',
-					'front_label' => 'Trabajo de campo y condiciones exigentes',
-					'description' => 'Equipos con protección reforzada para ambientes demandantes y uso intensivo.',
-				),
+				array( 'id' => 'baja', 'label' => 'Gama baja', 'front_label' => 'Funcionalidad al mejor precio', 'description' => 'Ideal para puestos administrativos en lugares fijos que buscan optimizar la inversión.' ),
+				array( 'id' => 'media', 'label' => 'Gama media', 'front_label' => 'Productividad constante para oficina', 'description' => 'Diseñada para jornadas intensas que necesitan una laptop que no se caliente ni se ralentice.' ),
+				array( 'id' => 'alta', 'label' => 'Gama alta', 'front_label' => 'Trabajo de campo y condiciones exigentes', 'description' => 'Equipos con protección reforzada para ambientes demandantes y uso intensivo.' ),
 			),
 			'periods'         => array(
-				array(
-					'id'          => 'semana_1',
-					'label'       => '1 semana',
-					'front_label' => '1 semana',
-					'description' => 'Periodo corto para proyectos puntuales.',
-					'unit'        => 'semanas',
-					'min_value'   => 1,
-					'max_value'   => 1,
-				),
-				array(
-					'id'          => 'semanas_2_4',
-					'label'       => '2 a 4 semanas',
-					'front_label' => '2 a 4 semanas',
-					'description' => 'Plan temporal extendido por semanas.',
-					'unit'        => 'semanas',
-					'min_value'   => 2,
-					'max_value'   => 4,
-				),
-				array(
-					'id'          => 'meses_1_12',
-					'label'       => '1 a 12 meses',
-					'front_label' => '1 a 12 meses',
-					'description' => 'Plan mensual para contratos estables.',
-					'unit'        => 'meses',
-					'min_value'   => 1,
-					'max_value'   => 12,
-				),
+				array( 'id' => 'semana_1', 'label' => '1 semana', 'front_label' => '1 semana', 'description' => 'Periodo corto para proyectos puntuales.', 'unit' => 'semanas', 'min_value' => 1, 'max_value' => 1 ),
+				array( 'id' => 'semanas_2_4', 'label' => '2 a 4 semanas', 'front_label' => '2 a 4 semanas', 'description' => 'Plan temporal extendido por semanas.', 'unit' => 'semanas', 'min_value' => 2, 'max_value' => 4 ),
+				array( 'id' => 'meses_1_12', 'label' => '1 a 12 meses', 'front_label' => '1 a 12 meses', 'description' => 'Plan mensual para contratos estables.', 'unit' => 'meses', 'min_value' => 1, 'max_value' => 12 ),
 			),
 			'extras'          => array(
-				array(
-					'id'    => 'extra_1',
-					'label' => '8GB RAM Extra',
-					'price' => '20.00',
-				),
+				array( 'id' => 'ram_8', 'type' => 'ram', 'label' => '8GB RAM Extra', 'price' => '20.00' ),
+				array( 'id' => 'hdd_1tb', 'type' => 'almacenamiento', 'label' => '1TB HDD Extra', 'price' => '30.00' ),
 			),
 			'prices'          => array(),
 		);
@@ -140,8 +93,6 @@ class Cotizador_Equipos_Settings {
 		$settings['processors'] = self::sanitize_options_list( isset( $raw['processors'] ) ? $raw['processors'] : array(), 'proc', $defaults['processors'] );
 		$settings['gamas'] = self::sanitize_options_list( isset( $raw['gamas'] ) ? $raw['gamas'] : array(), 'gama', $defaults['gamas'] );
 		$settings['periods'] = self::sanitize_periods( isset( $raw['periods'] ) ? $raw['periods'] : array(), 'periodo', $defaults['periods'] );
-		
-		// Nuevo: Extras
 		$settings['extras'] = self::sanitize_extras( isset( $raw['extras'] ) ? $raw['extras'] : array(), 'extra', $defaults['extras'] );
 
 		// Precios
@@ -153,10 +104,19 @@ class Cotizador_Equipos_Settings {
 
 	private static function sanitize_texts( $texts_raw, $defaults ) {
 		$texts = array();
+		$html_fields = array('welcome_title', 'welcome_subtitle');
+
 		foreach ( $defaults as $key => $default_value ) {
-			if ( ! isset( $texts_raw[ $key ] ) ) { $value = ''; } 
-			elseif ( 'whatsapp_url' === $key ) { $value = esc_url_raw( wp_unslash( $texts_raw[ $key ] ) ); } 
-			else { $value = sanitize_text_field( wp_unslash( $texts_raw[ $key ] ) ); }
+			if ( ! isset( $texts_raw[ $key ] ) ) { 
+				$value = ''; 
+			} elseif ( in_array( $key, $html_fields, true ) ) {
+				$value = wp_kses_post( wp_unslash( $texts_raw[ $key ] ) );
+			} elseif ( 'whatsapp_url' === $key ) { 
+				$value = esc_url_raw( wp_unslash( $texts_raw[ $key ] ) ); 
+			} else { 
+				$value = sanitize_text_field( wp_unslash( $texts_raw[ $key ] ) ); 
+			}
+			
 			if ( '' === $value ) { $value = $default_value; }
 			$texts[ $key ] = $value;
 		}
@@ -230,6 +190,7 @@ class Cotizador_Equipos_Settings {
 		$items_raw = is_array( $items_raw ) ? $items_raw : array();
 		$cleaned   = array();
 		$used_ids  = array();
+		$allowed_types = array( 'ram', 'almacenamiento' );
 
 		foreach ( $items_raw as $index => $item ) {
 			if ( ! is_array( $item ) ) continue;
@@ -237,6 +198,7 @@ class Cotizador_Equipos_Settings {
 			if ( '' === $label ) continue;
 
 			$id    = isset( $item['id'] ) ? sanitize_key( wp_unslash( $item['id'] ) ) : '';
+			$type  = isset( $item['type'] ) && in_array( $item['type'], $allowed_types ) ? $item['type'] : 'ram';
 			$price = isset( $item['price'] ) ? sanitize_text_field( wp_unslash( $item['price'] ) ) : '0';
 			$numeric_price = is_numeric($price) ? max( 0, (float) $price ) : 0;
 
@@ -247,7 +209,7 @@ class Cotizador_Equipos_Settings {
 			while ( isset( $used_ids[ $id ] ) ) { $id = $base_id . '_' . $suffix; ++$suffix; }
 			$used_ids[ $id ] = true;
 
-			$cleaned[] = array( 'id' => $id, 'label' => $label, 'price' => number_format( $numeric_price, 2, '.', '' ) );
+			$cleaned[] = array( 'id' => $id, 'type' => $type, 'label' => $label, 'price' => number_format( $numeric_price, 2, '.', '' ) );
 		}
 		return empty( $cleaned ) ? $fallback_items : $cleaned;
 	}
