@@ -14,18 +14,27 @@
   function CotizadorUI(root, config) {
     this.root = root;
     this.config = this.normalizeConfig(config);
-    this.state = { step: 1, processorId: null, gamaId: null, timeUnit: 'meses', timeValue: 1, quantity: 1 };
+    this.state = { 
+        step: 1, 
+        processorId: null, 
+        gamaId: null, 
+        timeUnit: 'meses', 
+        timeValue: 1, 
+        quantity: 1,
+        isModalOpen: false 
+    };
   }
 
   CotizadorUI.prototype.mount = function () {
-    // Escudo protector inicial
-    this.root.innerHTML = '<div class="ce-cotizador-wrapper"><div class="ceq-stage"><div class="ceq-header"></div><div class="ceq-body"></div><div class="ceq-footer"></div></div></div>';
+    this.root.innerHTML = '<div class="ce-cotizador-wrapper"><div class="ceq-stage"><div class="ceq-header"></div><div class="ceq-body"></div><div class="ceq-footer"></div></div><div class="ceq-modal-root"></div></div>';
     this.bindEvents();
     this.render();
   };
 
   CotizadorUI.prototype.bindEvents = function () {
     var self = this;
+    
+    // Delegación de clics
     this.root.addEventListener("click", function (e) {
       var btn = e.target.closest("[data-action]");
       if (!btn) return;
@@ -45,6 +54,35 @@
       
       if (action === "qty-minus") { self.state.quantity = Math.max(1, self.state.quantity - parseInt(btn.getAttribute("data-amount"))); self.renderBody(); self.renderFooter(); }
       if (action === "qty-plus") { self.state.quantity = Math.min(999, self.state.quantity + parseInt(btn.getAttribute("data-amount"))); self.renderBody(); self.renderFooter(); }
+
+      // Acciones del Modal
+      if (action === "open-modal") { self.state.isModalOpen = true; self.renderModal(); }
+      if (action === "close-modal") { self.state.isModalOpen = false; self.renderModal(); }
+    });
+
+    // Envío del formulario del modal
+    this.root.addEventListener("submit", function(e) {
+        if(e.target.id === "ceq-quote-form") {
+            e.preventDefault();
+            
+            // Aquí puedes conectar en el futuro con un Endpoint de WordPress.
+            // Por ahora hacemos una simulación de carga y éxito.
+            var btn = e.target.querySelector('button[type="submit"]');
+            btn.innerHTML = '<svg style="width:20px;height:20px;animation:spin 1s linear infinite;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Enviando...';
+            btn.disabled = true;
+
+            setTimeout(function() {
+                var modalBox = self.root.querySelector(".ceq-modal-box");
+                modalBox.innerHTML = `
+                    <div class="ceq-success">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <h3>¡Cotización enviada!</h3>
+                        <p>Hemos enviado un PDF formal con todos los detalles a tu correo electrónico.</p>
+                        <button type="button" class="ceq-btn-primary ceq-btn-block" data-action="close-modal">Aceptar y cerrar</button>
+                    </div>
+                `;
+            }, 1200);
+        }
     });
   };
 
@@ -66,6 +104,7 @@
     this.renderHeader();
     this.renderBody();
     this.renderFooter();
+    this.renderModal(); // Renderiza u oculta el modal si el state cambió
   };
 
   CotizadorUI.prototype.renderHeader = function () {
@@ -74,7 +113,7 @@
       1: { eye: 'PASO 1 DE 4', title: t.step1_title, sub: 'Selecciona la potencia base para tu equipo.' },
       2: { eye: 'PASO 2 DE 4', title: t.step2_title, sub: 'El chasis determina la durabilidad, ventilación y portabilidad del equipo.' },
       3: { eye: 'PASO 3 DE 4', title: 'Configura tu requerimiento', sub: 'Calculamos el precio exacto basado en el tiempo de alquiler.' },
-      4: { eye: 'PASO 4 DE 4', title: '¡Excelente elección!', sub: 'Revisa el resumen y hablemos para coordinar la entrega.' },
+      4: { eye: 'PASO 4 DE 4', title: '¡Excelente elección!', sub: 'Revisa el resumen y obtén tu cotización formal.' },
     }[this.state.step];
     
     this.root.querySelector(".ceq-header").innerHTML = 
@@ -110,9 +149,12 @@
       var html = '<div class="ceq-options">';
       items.forEach(function (item, i) {
         var isSelected = item.id === selectedId;
+        // Prioriza mostrar front_label si existe y no está vacío, sino usa label.
+        var displayTitle = (item.front_label && item.front_label.trim() !== "") ? item.front_label : item.label;
+
         html += '<button type="button" class="ceq-option ' + (isSelected ? "is-selected" : "") + '" data-action="' + action + '" data-value="' + item.id + '">' +
                 '<span class="ceq-opt-icon">' + self.getIcon(self.state.step, i) + '</span>' +
-                '<span class="ceq-opt-main"><span class="ceq-opt-title">' + (item.front_label||item.label) + '</span><span class="ceq-opt-desc">' + item.description + '</span></span>' +
+                '<span class="ceq-opt-main"><span class="ceq-opt-title">' + displayTitle + '</span><span class="ceq-opt-desc">' + item.description + '</span></span>' +
                 '<span class="ceq-opt-radio">' + self.getRadioSvg(isSelected) + '</span></button>';
       });
       body.innerHTML = html + '</div>' + waBtn;
@@ -217,7 +259,7 @@
                 <div class="ceq-right-card" style="padding:40px 24px;">
                     <div class="ceq-opt-icon" style="margin:0 auto 20px; background:#fff; color:#10b981; border:2px solid #10b981;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
                     <h3 style="font-size:20px; color:#111827; margin-bottom:12px;">¡Configuración lista!</h3>
-                    <p style="color:#6b7280; font-size:15px; margin:0;">El cálculo es estimado. Conversemos por WhatsApp para validar stock y formalizar tu contrato.</p>
+                    <p style="color:#6b7280; font-size:15px; margin:0;">El cálculo es estimado. Solicita tu cotización formal ahora mismo.</p>
                 </div>
             </div>
         </div>`;
@@ -227,11 +269,54 @@
   CotizadorUI.prototype.renderFooter = function () {
     var footer = this.root.querySelector(".ceq-footer");
     if (this.state.step === 4) {
-      footer.innerHTML = '<button class="ceq-btn-ghost" data-action="restart"><svg style="width:20px;height:20px;margin-right:8px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Volver a empezar</button><a class="ceq-btn-primary" href="'+this.config.texts.whatsapp_url+'" target="_blank">Conversar por WhatsApp</a>';
+      footer.innerHTML = '<button class="ceq-btn-ghost" data-action="restart"><svg style="width:20px;height:20px;margin-right:8px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Volver a empezar</button>' + 
+                         '<button class="ceq-btn-primary" data-action="open-modal">Quiero la cotización en mi correo</button>';
       return;
     }
     var back = this.state.step > 1 ? '<button class="ceq-btn-ghost" data-action="back"><svg style="width:20px;height:20px;margin-right:8px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg> Volver</button>' : '<div></div>';
     footer.innerHTML = back + '<button class="ceq-btn-primary" data-action="next" ' + (this.canContinue()?'':'disabled') + '>' + (this.state.step===3 ? 'Ver mi solución →' : 'Continuar →') + '</button>';
+  };
+
+  CotizadorUI.prototype.renderModal = function () {
+      var modalRoot = this.root.querySelector(".ceq-modal-root");
+      
+      if (!this.state.isModalOpen) {
+          modalRoot.innerHTML = '';
+          return;
+      }
+
+      modalRoot.innerHTML = `
+        <div class="ceq-modal-overlay" data-action="close-modal">
+            <div class="ceq-modal-box" onclick="event.stopPropagation()">
+                <button class="ceq-modal-close" data-action="close-modal">
+                    <svg style="width:20px;height:20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <h3 class="ceq-modal-title">Recibe tu cotización</h3>
+                <p class="ceq-modal-desc">Te enviaremos un PDF formal con todos los detalles.</p>
+                
+                <form id="ceq-quote-form">
+                    <div class="ceq-form-group">
+                        <label class="ceq-form-label">Nombre completo *</label>
+                        <input type="text" class="ceq-form-input" required placeholder="Juan Pérez">
+                    </div>
+                    <div class="ceq-form-group">
+                        <label class="ceq-form-label">Correo corporativo *</label>
+                        <input type="email" class="ceq-form-input" required placeholder="juan@empresa.com">
+                        <span class="ceq-form-help">Para enviarte el PDF formal de tu cotización.</span>
+                    </div>
+                    <div class="ceq-form-group">
+                        <label class="ceq-form-label">WhatsApp (Opcional)</label>
+                        <input type="tel" class="ceq-form-input" placeholder="+51 999 999 999">
+                        <span class="ceq-form-help">Para dudas técnicas rápidas.</span>
+                    </div>
+                    <button type="submit" class="ceq-btn-primary ceq-btn-block">
+                        <svg style="width:18px;height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg> 
+                        Enviar cotización
+                    </button>
+                </form>
+            </div>
+        </div>
+      `;
   };
 
   CotizadorUI.prototype.getMatchedRule = function() {

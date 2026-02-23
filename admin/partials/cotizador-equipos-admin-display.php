@@ -68,8 +68,17 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 						<div class="space-y-3">
 							<template x-for="(proc, index) in formData.processors" :key="proc.id">
 								<div class="p-4 border border-slate-200 rounded-lg bg-slate-50">
-									<input type="text" x-model="proc.label" class="w-full font-medium border border-slate-200 rounded p-2 text-sm outline-none mb-2" placeholder="Título Principal">
-									<textarea x-model="proc.description" class="w-full border border-slate-200 rounded p-2 text-sm outline-none text-slate-500 mb-2" rows="2" placeholder="Descripción"></textarea>
+									<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+										<div>
+											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Nombre interno (Backend)</label>
+											<input type="text" x-model="proc.label" class="w-full font-medium border border-slate-200 rounded p-2 text-sm outline-none focus:border-orange-500" placeholder="Ej: Core i5">
+										</div>
+										<div>
+											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Título público (Frontend)</label>
+											<input type="text" x-model="proc.front_label" class="w-full font-medium border border-orange-200 bg-orange-50/30 text-orange-800 rounded p-2 text-sm outline-none focus:border-orange-500" placeholder="Ej: Aplicaciones estándar">
+										</div>
+									</div>
+									<textarea x-model="proc.description" class="w-full border border-slate-200 rounded p-2 text-sm outline-none text-slate-500 mb-2" rows="2" placeholder="Descripción de la opción"></textarea>
 									<div class="flex justify-end"><button type="button" @click="removeItem('processors', index)" class="text-xs text-red-500 font-semibold cursor-pointer border-none bg-transparent hover:underline">Eliminar</button></div>
 								</div>
 							</template>
@@ -82,8 +91,17 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 						<div class="space-y-3">
 							<template x-for="(gama, index) in formData.gamas" :key="gama.id">
 								<div class="p-4 border border-slate-200 rounded-lg bg-slate-50">
-									<input type="text" x-model="gama.label" class="w-full font-medium border border-slate-200 rounded p-2 text-sm outline-none mb-2" placeholder="Título Principal">
-									<textarea x-model="gama.description" class="w-full border border-slate-200 rounded p-2 text-sm outline-none text-slate-500 mb-2" rows="2" placeholder="Descripción"></textarea>
+									<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+										<div>
+											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Nombre interno (Backend)</label>
+											<input type="text" x-model="gama.label" class="w-full font-medium border border-slate-200 rounded p-2 text-sm outline-none focus:border-orange-500" placeholder="Ej: Gama base">
+										</div>
+										<div>
+											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Título público (Frontend)</label>
+											<input type="text" x-model="gama.front_label" class="w-full font-medium border border-orange-200 bg-orange-50/30 text-orange-800 rounded p-2 text-sm outline-none focus:border-orange-500" placeholder="Ej: Funcionalidad al mejor precio">
+										</div>
+									</div>
+									<textarea x-model="gama.description" class="w-full border border-slate-200 rounded p-2 text-sm outline-none text-slate-500 mb-2" rows="2" placeholder="Descripción de la opción"></textarea>
 									<div class="flex justify-end"><button type="button" @click="removeItem('gamas', index)" class="text-xs text-red-500 font-semibold cursor-pointer border-none bg-transparent hover:underline">Eliminar</button></div>
 								</div>
 							</template>
@@ -233,7 +251,7 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 				if (type === 'periods') {
 					list.push({ id: id, label: '', unit: 'meses', min_value: 1, max_value: '' });
 				} else {
-					list.push({ id: id, label: '', description: '' });
+					list.push({ id: id, label: '', front_label: '', description: '' });
 				}
 				this.normalizePrices();
 			},
