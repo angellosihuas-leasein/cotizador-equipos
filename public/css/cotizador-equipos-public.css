@@ -1,106 +1,121 @@
 .ce-cotizador {
-	--ce-bg: #f3f4f6;
+	--ce-bg: #f9f9fa;
 	--ce-card: #ffffff;
 	--ce-text: #111111;
 	--ce-muted: #6b7280;
-	--ce-border: #d1d5db;
-	--ce-accent: #f97316;
-	--ce-accent-dark: #ea580c;
-	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	--ce-border: #e5e7eb;
+	--ce-accent: #f95316;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 	color: var(--ce-text);
-	background: radial-gradient(circle at top, #ffffff 0%, var(--ce-bg) 65%);
-	border-radius: 24px;
-	padding: 32px 20px;
+	background: var(--ce-bg);
+	padding: 40px 20px;
+	border-radius: 12px;
+	box-sizing: border-box;
+}
+
+.ce-cotizador * {
+	box-sizing: border-box;
 }
 
 .ceq-shell {
-	max-width: 980px;
+	max-width: 800px;
 	margin: 0 auto;
 }
 
 .ceq-header {
 	text-align: center;
-	margin-bottom: 28px;
+	margin-bottom: 40px;
 }
 
 .ceq-eyebrow {
 	margin: 0;
-	font-size: 13px;
-	letter-spacing: 0.2em;
-	font-weight: 700;
-	color: #737373;
+	font-size: 12px;
+	letter-spacing: 0.15em;
+	font-weight: 600;
+	color: #9ca3af;
+	text-transform: uppercase;
 }
 
 .ceq-title {
-	margin: 12px auto 0;
-	max-width: 760px;
-	font-size: clamp(32px, 5vw, 68px);
-	line-height: 0.96;
+	margin: 16px auto 0;
+	font-size: 42px;
+	line-height: 1.1;
 	font-weight: 800;
+	letter-spacing: -0.02em;
 }
 
 .ceq-subtitle {
-	margin: 16px auto 0;
-	max-width: 760px;
-	font-size: clamp(17px, 2.3vw, 22px);
+	margin: 12px auto 0;
+	font-size: 18px;
 	color: var(--ce-muted);
 }
 
 .ceq-options {
-	display: grid;
-	gap: 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
 }
 
 .ceq-option {
 	width: 100%;
-	border: 2px solid var(--ce-border);
-	background: #f9fafb;
-	border-radius: 24px;
-	padding: 18px 20px;
+	background: var(--ce-card);
+	border: 1px solid var(--ce-border);
+	border-radius: 16px;
+	padding: 24px;
 	text-align: left;
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
-	gap: 16px;
+	gap: 20px;
 	cursor: pointer;
-	transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+	transition: all 0.2s ease;
 }
 
 .ceq-option:hover {
-	transform: translateY(-1px);
-	border-color: #b8c0ca;
+	border-color: #d1d5db;
+	box-shadow: 0 4px 12px rgba(0,0,0,0.03);
 }
 
 .ceq-option.is-selected {
 	border-color: var(--ce-accent);
-	background: #fff7ed;
+}
+
+.ceq-option-icon {
+	flex-shrink: 0;
+	width: 48px;
+	height: 48px;
+	border-radius: 12px;
+	background: #f3f4f6;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #4b5563;
 }
 
 .ceq-option-main {
-	display: block;
+	flex-grow: 1;
 }
 
 .ceq-option-title {
 	display: block;
-	font-size: clamp(25px, 2vw, 38px);
+	font-size: 18px;
 	font-weight: 700;
-	line-height: 1.05;
+	color: #111;
 }
 
 .ceq-option-description {
 	display: block;
-	margin-top: 8px;
-	font-size: clamp(16px, 1.5vw, 21px);
+	margin-top: 6px;
+	font-size: 15px;
 	color: var(--ce-muted);
+	line-height: 1.4;
 }
 
 .ceq-option-dot {
 	flex-shrink: 0;
-	width: 28px;
-	height: 28px;
-	border-radius: 999px;
-	border: 2px solid var(--ce-border);
-	display: inline-block;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	border: 2px solid #d1d5db;
 	position: relative;
 }
 
@@ -111,248 +126,166 @@
 .ceq-option.is-selected .ceq-option-dot::after {
 	content: "";
 	position: absolute;
-	inset: 6px;
+	inset: 5px;
 	border-radius: inherit;
 	background: var(--ce-accent);
 }
 
+/* STEP 3 & 4 GRID */
 .ceq-grid {
 	display: grid;
-	grid-template-columns: 1.35fr 1fr;
-	gap: 16px;
+	grid-template-columns: 1fr 1fr;
+	gap: 24px;
+	align-items: stretch;
 }
 
 .ceq-panel,
-.ceq-price-card,
-.ceq-summary-card,
-.ceq-summary-side {
+.ceq-price-card {
 	background: var(--ce-card);
 	border: 1px solid var(--ce-border);
-	border-radius: 22px;
-	padding: 18px;
+	border-radius: 16px;
+	padding: 28px;
 }
 
-.ceq-panel h3,
-.ceq-qty h3 {
-	margin: 0 0 10px;
-	font-size: 14px;
+.ceq-panel h3, .ceq-qty-box h3 {
+	margin: 0 0 14px;
+	font-size: 12px;
 	text-transform: uppercase;
-	letter-spacing: 0.07em;
+	letter-spacing: 0.1em;
+	color: #6b7280;
+	font-weight: 700;
+}
+
+.ceq-period-opts {
+	display: flex;
+	gap: 12px;
+	margin-bottom: 24px;
+}
+.ceq-period-btn {
+	flex: 1;
+	border: 1px solid var(--ce-border);
+	background: #fff;
+	padding: 14px 0;
+	border-radius: 12px;
+	font-size: 16px;
+	font-weight: 600;
+	cursor: pointer;
 	color: #4b5563;
 }
+.ceq-period-btn.is-active {
+	border-color: var(--ce-accent);
+	color: var(--ce-accent);
+	background: #fff5f2;
+}
 
-.ceq-qty {
-	margin-top: 14px;
+.ceq-qty-box {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding-top: 20px;
+	border-top: 1px solid var(--ce-border);
+	margin-top: 20px;
 }
 
 .ceq-qty-controls {
 	display: flex;
 	align-items: center;
-	gap: 14px;
+	gap: 18px;
+	border: 1px solid var(--ce-border);
+	border-radius: 30px;
+	padding: 4px 6px;
 }
 
 .ceq-qty-btn {
-	width: 44px;
-	height: 44px;
-	border-radius: 999px;
-	border: 1px solid var(--ce-border);
-	background: #f9fafb;
-	font-size: 30px;
-	line-height: 1;
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	border: none;
+	background: transparent;
+	font-size: 24px;
+	color: var(--ce-accent);
 	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
+.ceq-qty-btn:hover { background: #f3f4f6; }
 
 .ceq-qty-value {
-	min-width: 40px;
+	min-width: 24px;
 	text-align: center;
-	font-size: 28px;
+	font-size: 20px;
 	font-weight: 700;
-}
-
-.ceq-price-card {
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
 }
 
 .ceq-price-label {
 	margin: 0;
-	font-size: 13px;
-	letter-spacing: 0.13em;
+	font-size: 12px;
+	letter-spacing: 0.1em;
 	text-transform: uppercase;
-	color: #4b5563;
+	color: #6b7280;
 	font-weight: 700;
 }
 
 .ceq-price-value {
-	margin: 8px 0;
-	font-size: clamp(46px, 4vw, 70px);
+	margin: 12px 0 6px;
+	font-size: 48px;
 	line-height: 1;
 	font-weight: 800;
+	letter-spacing: -0.03em;
 }
 
 .ceq-price-note {
 	margin: 0;
 	color: var(--ce-muted);
-	font-size: 18px;
+	font-size: 16px;
+	padding-bottom: 24px;
+	border-bottom: 1px solid var(--ce-border);
 }
 
 .ceq-price-total {
-	margin-top: 12px;
-	padding-top: 12px;
-	border-top: 1px solid var(--ce-border);
+	margin-top: 24px;
 	font-weight: 700;
-	font-size: 22px;
-}
-
-.ceq-summary {
-	display: grid;
-	grid-template-columns: 1.2fr 1fr;
-	gap: 16px;
-}
-
-.ceq-price-note + .ceq-specs {
-	margin-top: 14px;
-}
-
-.ceq-specs {
-	display: grid;
-	gap: 10px;
-}
-
-.ceq-specs div {
-	display: flex;
-	justify-content: space-between;
-	gap: 12px;
-	font-size: 17px;
-	padding-bottom: 8px;
-	border-bottom: 1px solid #eceff3;
-}
-
-.ceq-specs dt {
-	color: var(--ce-muted);
-}
-
-.ceq-specs dd {
-	margin: 0;
-	font-weight: 700;
-}
-
-.ceq-total {
-	color: var(--ce-accent-dark);
-}
-
-.ceq-summary-side {
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-}
-
-.ceq-summary-side p {
-	margin: 0;
-	color: var(--ce-muted);
 	font-size: 18px;
-	line-height: 1.45;
-}
-
-.ceq-badge {
-	display: inline-flex;
-	align-items: center;
-	align-self: flex-start;
-	margin-bottom: 14px;
-	background: var(--ce-accent);
-	color: #fff;
-	border-radius: 999px;
-	padding: 8px 14px;
-	font-size: 13px;
-	font-weight: 700;
 }
 
 .ceq-footer {
-	margin-top: 18px;
+	margin-top: 48px;
 }
 
 .ceq-footer-inner {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 12px;
 }
 
 .ceq-btn {
-	border-radius: 999px;
-	padding: 13px 24px;
-	font-size: 20px;
-	font-weight: 700;
-	border: 1px solid transparent;
+	border-radius: 30px;
+	padding: 14px 28px;
+	font-size: 16px;
+	font-weight: 600;
+	border: none;
 	cursor: pointer;
+	transition: opacity 0.2s;
 }
 
-.ceq-btn:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
+.ceq-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.ceq-btn-primary {
-	background: var(--ce-accent);
-	color: #fff;
-}
+.ceq-btn-primary { background: var(--ce-accent); color: #fff; }
+.ceq-btn-primary:hover:not(:disabled) { opacity: 0.9; }
 
-.ceq-btn-primary:hover:not(:disabled) {
-	background: var(--ce-accent-dark);
-}
+.ceq-btn-ghost { background: transparent; color: #6b7280; padding: 14px 0; }
+.ceq-btn-ghost:hover { color: #111; }
 
-.ceq-btn-ghost {
-	background: transparent;
-	border-color: transparent;
-	color: #4b5563;
-}
+.ceq-specs { margin-top: 20px; display: grid; gap: 12px; }
+.ceq-specs div { display: flex; justify-content: space-between; font-size: 15px; border-bottom: 1px solid #f3f4f6; padding-bottom: 8px;}
+.ceq-specs dt { color: var(--ce-muted); }
+.ceq-specs dd { margin: 0; font-weight: 700; }
+.ceq-total { color: var(--ce-accent); font-size: 18px;}
 
-.ceq-btn-wide {
-	margin-left: auto;
-}
-
-.ceq-spacer {
-	width: 80px;
-	display: inline-block;
-}
-
-.ceq-error {
-	color: #b91c1c;
-	background: #fef2f2;
-	border: 1px solid #fecaca;
-	padding: 10px 14px;
-	border-radius: 10px;
-}
-
-@media (max-width: 860px) {
-	.ce-cotizador {
-		padding: 20px 14px;
-	}
-
-	.ceq-grid,
-	.ceq-summary {
-		grid-template-columns: 1fr;
-	}
-
-	.ceq-option-title {
-		font-size: clamp(20px, 6vw, 34px);
-	}
-
-	.ceq-option-description {
-		font-size: clamp(14px, 4vw, 19px);
-	}
-
-	.ceq-price-value {
-		font-size: clamp(38px, 12vw, 58px);
-	}
-
-	.ceq-btn {
-		font-size: 16px;
-		padding: 12px 18px;
-	}
-
-	.ceq-footer-inner {
-		flex-wrap: wrap;
-	}
+@media (max-width: 768px) {
+	.ceq-title { font-size: 32px; }
+	.ceq-grid { grid-template-columns: 1fr; }
+	.ceq-option { flex-direction: column; align-items: flex-start; gap: 12px; }
+	.ceq-option-dot { position: absolute; right: 24px; top: 24px; }
 }

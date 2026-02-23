@@ -20,108 +20,69 @@ class Cotizador_Equipos_Settings {
 			'currency_symbol' => 'S/.',
 			'texts'           => array(
 				'step1_eyebrow'   => 'PASO 1 DE 4',
-				'step1_title'     => 'Elige el procesador',
-				'step1_subtitle'  => 'Selecciona la potencia base para tu equipo.',
+				'step1_title'     => '¿Qué aplicaciones vas a utilizar?',
+				'step1_subtitle'  => 'Elige la potencia que mejor se adapta a tus tareas habituales.',
 				'step2_eyebrow'   => 'PASO 2 DE 4',
-				'step2_title'     => 'Selecciona la gama',
-				'step2_subtitle'  => 'Define el nivel de uso según tu jornada.',
+				'step2_title'     => '¿Qué tan pesada será la jornada para tu laptop?',
+				'step2_subtitle'  => 'El chasis determina la durabilidad, ventilación y portabilidad del equipo.',
 				'step3_eyebrow'   => 'PASO 3 DE 4',
-				'step3_title'     => 'Elige el periodo de alquiler',
-				'step3_subtitle'  => 'A mayor plazo, menor cuota mensual.',
+				'step3_title'     => 'Elige el tiempo de alquiler',
+				'step3_subtitle'  => 'Selecciona la unidad y la cantidad de tiempo que necesitas.',
 				'step4_eyebrow'   => 'PASO 4 DE 4',
-				'step4_title'     => 'Tu cotizacion esta lista',
+				'step4_title'     => 'Tu cotización está lista',
 				'step4_subtitle'  => 'Revisa el resumen antes de solicitar contacto.',
-				'btn_next'        => 'Continuar',
-				'btn_back'        => 'Volver',
-				'btn_finish'      => 'Ver mi solucion',
-				'btn_restart'     => 'Cambiar seleccion',
-				'btn_request'     => 'Quiero la cotizacion en mi correo',
+				'btn_next'        => 'Continuar →',
+				'btn_back'        => '← Volver',
+				'btn_finish'      => 'Ver mi solución',
+				'btn_restart'     => 'Cambiar selección',
+				'btn_request'     => 'Quiero hablar con un especialista ahora →',
 				'price_label'     => 'CUOTA MENSUAL / LAPTOP',
 				'quantity_label'  => 'Cantidad de laptops',
-				'period_label'    => 'Periodo de alquiler',
+				'period_label'    => 'Duración del alquiler',
 			),
 			'processors'      => array(
 				array(
 					'id'          => 'i5',
 					'label'       => 'Core i5',
-					'description' => 'Ideal para tareas administrativas y productividad diaria.',
+					'front_label' => 'Aplicaciones estándar',
+					'description' => 'Uso principalmente Office, correos, videollamadas y navegación fluida.',
 				),
 				array(
 					'id'          => 'i7',
 					'label'       => 'Core i7',
-					'description' => 'Mayor rendimiento para equipos con cargas exigentes.',
+					'front_label' => 'Software de alto rendimiento',
+					'description' => 'Para programación, análisis masivo de datos o procesos que requieren respuesta inmediata.',
 				),
 			),
 			'gamas'           => array(
 				array(
 					'id'          => 'baja',
 					'label'       => 'Gama baja',
-					'description' => 'Funcionamiento estable para labores basicas.',
+					'front_label' => 'Funcionalidad al mejor precio',
+					'description' => 'Ideal para puestos administrativos en lugares fijos que buscan optimizar la inversión.',
 				),
 				array(
 					'id'          => 'media',
 					'label'       => 'Gama media',
-					'description' => 'Balance entre costo, potencia y durabilidad.',
-				),
-				array(
-					'id'          => 'alta',
-					'label'       => 'Gama alta',
-					'description' => 'Maximo rendimiento para operaciones criticas.',
+					'front_label' => 'Productividad constante para oficina',
+					'description' => 'Diseñada para jornadas intensas que necesitan una laptop que no se caliente ni se ralentice.',
 				),
 			),
 			'periods'         => array(
 				array(
-					'id'          => '1_semana',
-					'label'       => '1 semana',
-					'description' => 'Periodo corto para proyectos puntuales.',
+					'id'          => 'dia',
+					'label'       => 'Día',
+					'front_label' => 'Días',
+					'description' => 'Precio base por día.',
 				),
 				array(
-					'id'          => '1_mes',
-					'label'       => '1 mes',
-					'description' => 'Ideal para pruebas y necesidades temporales.',
-				),
-				array(
-					'id'          => '12_meses',
-					'label'       => '12 meses',
-					'description' => 'Cuota menor para planes de largo plazo.',
+					'id'          => 'mes',
+					'label'       => 'Mes',
+					'front_label' => 'Meses',
+					'description' => 'Precio base por mes.',
 				),
 			),
-			'prices'          => array(
-				'i5' => array(
-					'baja'  => array(
-						'1_semana' => '140.00',
-						'1_mes'    => '220.00',
-						'12_meses' => '190.00',
-					),
-					'media' => array(
-						'1_semana' => '170.00',
-						'1_mes'    => '260.00',
-						'12_meses' => '230.00',
-					),
-					'alta'  => array(
-						'1_semana' => '190.00',
-						'1_mes'    => '290.00',
-						'12_meses' => '260.00',
-					),
-				),
-				'i7' => array(
-					'baja'  => array(
-						'1_semana' => '180.00',
-						'1_mes'    => '280.00',
-						'12_meses' => '250.00',
-					),
-					'media' => array(
-						'1_semana' => '220.00',
-						'1_mes'    => '330.00',
-						'12_meses' => '300.00',
-					),
-					'alta'  => array(
-						'1_semana' => '250.00',
-						'1_mes'    => '390.00',
-						'12_meses' => '350.00',
-					),
-				),
-			),
+			'prices'          => array(),
 		);
 	}
 
@@ -215,6 +176,7 @@ class Cotizador_Equipos_Settings {
 				continue;
 			}
 
+			$front_label = isset( $item['front_label'] ) ? sanitize_text_field( wp_unslash( $item['front_label'] ) ) : '';
 			$description = isset( $item['description'] ) ? sanitize_textarea_field( wp_unslash( $item['description'] ) ) : '';
 			$id          = isset( $item['id'] ) ? sanitize_key( wp_unslash( $item['id'] ) ) : '';
 
@@ -238,6 +200,7 @@ class Cotizador_Equipos_Settings {
 			$cleaned[] = array(
 				'id'          => $id,
 				'label'       => $label,
+				'front_label' => $front_label,
 				'description' => $description,
 			);
 		}
