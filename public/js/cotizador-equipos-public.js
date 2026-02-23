@@ -107,7 +107,7 @@
         '<span class="ceq-wa-text"><span class="ceq-wa-title">Quiero hablar con un especialista ahora</span><span class="ceq-wa-desc">Si prefieres, te atendemos por WhatsApp y armamos la cotización contigo.</span></span>' +
         '<span style="color:#f97316; font-size:24px; font-weight:300;">→</span></a>' : '';
 
-      var html = waBtn + '<div class="ceq-options">';
+      var html = '<div class="ceq-options">';
       items.forEach(function (item, i) {
         var isSelected = item.id === selectedId;
         html += '<button type="button" class="ceq-option ' + (isSelected ? "is-selected" : "") + '" data-action="' + action + '" data-value="' + item.id + '">' +
@@ -115,7 +115,9 @@
                 '<span class="ceq-opt-main"><span class="ceq-opt-title">' + (item.front_label||item.label) + '</span><span class="ceq-opt-desc">' + item.description + '</span></span>' +
                 '<span class="ceq-opt-radio">' + self.getRadioSvg(isSelected) + '</span></button>';
       });
-      body.innerHTML = html + '</div>';
+      body.innerHTML = html + '</div>' + waBtn;
+
+      
       return;
     }
 
