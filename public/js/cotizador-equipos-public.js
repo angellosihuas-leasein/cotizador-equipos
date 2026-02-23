@@ -144,17 +144,17 @@
         return;
     }
 
-    var t = this.config.texts;
+    var t = this.config.texts || {};
     var st = {
       1: { eye: t.step1_eyebrow, title: t.step1_title, sub: t.step1_subtitle },
       2: { eye: t.step2_eyebrow, title: t.step2_title, sub: t.step2_subtitle },
       3: { eye: t.step3_eyebrow, title: t.step3_title, sub: t.step3_subtitle },
       4: { eye: t.step4_eyebrow, title: t.step4_title, sub: t.step4_subtitle },
-      5: { eye: 'MODO MANUAL', title: t.texts?.manual_title || 'Configuración Rápida', sub: 'Personaliza tu equipo, extras y tiempo al instante.' }
+      5: { eye: 'MODO MANUAL', title: t.manual_title || 'Configuración Rápida', sub: 'Personaliza tu equipo, extras y tiempo al instante.' }
     }[this.state.step];
     
     this.root.querySelector(".ceq-header").innerHTML = 
-      '<span class="ceq-eyebrow">' + st.eye + '</span><h2 class="ceq-title">' + st.title + '</h2><p class="ceq-subtitle">' + st.sub + '</p>';
+      '<span class="ceq-eyebrow">' + (st.eye || '') + '</span><h2 class="ceq-title">' + (st.title || '') + '</h2><p class="ceq-subtitle">' + (st.sub || '') + '</p>';
   };
 
   CotizadorUI.prototype.getIcon = function(step, i) {
@@ -171,18 +171,24 @@
   CotizadorUI.prototype.renderBody = function () {
     var body = this.root.querySelector(".ceq-body");
     var self = this;
-    var t = this.config.texts;
+    var t = this.config.texts || {};
 
-    // Paso 0: Bienvenida
+    // Paso 0: Bienvenida (Agregando validación de datos seguros)
     if (this.state.step === 0) {
+        var wTitle = t.welcome_title || 'Cotiza el alquiler de laptops <span style="color:#ea580c;">para tu empresa</span> en segundos.';
+        var wSub = t.welcome_subtitle || 'Obtén precios al instante con nuestro cotizador digital o configura una propuesta técnica a medida.';
+        var wBtnSmart = t.btn_smart || 'Iniciar cotización inteligente →';
+        var wBtnManual = t.btn_manual || 'Configura aquí';
+        var wEyebrow = t.welcome_eyebrow || 'COTIZADOR DIGITAL';
+
         body.innerHTML = `
             <div class="ceq-welcome-wrap">
-                <span class="ceq-eyebrow ceq-badge-eyebrow">${t.welcome_eyebrow || 'COTIZADOR DIGITAL'}</span>
-                <h1 class="ceq-title ceq-welcome-title">${t.welcome_title}</h1>
-                <p class="ceq-subtitle ceq-welcome-subtitle">${t.welcome_subtitle}</p>
+                <span class="ceq-eyebrow ceq-badge-eyebrow">${wEyebrow}</span>
+                <h1 class="ceq-title ceq-welcome-title">${wTitle}</h1>
+                <p class="ceq-subtitle ceq-welcome-subtitle">${wSub}</p>
                 <div class="ceq-welcome-actions">
-                    <button class="ceq-btn-primary" data-action="start-smart">${t.btn_smart || 'Iniciar cotización inteligente →'}</button>
-                    <button class="ceq-btn-outline" data-action="go-manual"><svg style="width:20px;height:20px;margin-right:8px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg> ${t.btn_manual || 'Configura aquí'}</button>
+                    <button class="ceq-btn-primary" data-action="start-smart">${wBtnSmart}</button>
+                    <button class="ceq-btn-outline" data-action="go-manual"><svg style="width:20px;height:20px;margin-right:8px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg> ${wBtnManual}</button>
                 </div>
             </div>
         `;
@@ -196,7 +202,7 @@
       var action = this.state.step === 1 ? "select-processor" : "select-gama";
       
       var waBtn = this.state.step === 1 ? 
-        '<a class="ceq-whatsapp-cta" href="'+t.whatsapp_url+'" target="_blank">' +
+        '<a class="ceq-whatsapp-cta" href="'+(t.whatsapp_url || 'https://wa.me/')+'" target="_blank">' +
         '<span class="ceq-wa-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></span>' +
         '<span class="ceq-wa-text"><span class="ceq-wa-title">'+ (t.whatsapp_label || 'Quiero hablar con un especialista') +'</span><span class="ceq-wa-desc">'+ (t.whatsapp_desc || '') +'</span></span>' +
         '<span style="color:#ea580c; font-size:24px; font-weight:300;">→</span></a>' : '';
@@ -217,14 +223,17 @@
       return;
     }
 
+    // Variables de Texto y Cálculo General para Pasos 3, 4 y 5
     var singleUnit = this.state.timeUnit === 'meses' ? 'mes' : 'semana';
-    var timeLabel = this.state.timeUnit === 'meses' ? 'MESES' : 'SEMANAS';
+    var timeLabel = this.state.timeUnit === 'meses' ? 'POR MES' : 'POR SEMANA';
+    var qtyLabel = this.state.quantity > 1 ? 'laptops' : 'laptop';
+    
+    var pBase = this.getBasePrice(); // Precio unitario (por laptop) en el periodo (mes/semana)
+    var tPricePerPeriod = pBase * this.state.quantity; // Costo por mes o semana de TODAS las laptops
+    var finalPriceAbsolute = tPricePerPeriod * this.state.timeValue; // Costo total del contrato de inicio a fin
 
     // Paso 5: Modo Manual con Extras
     if (this.state.step === 5) {
-      var pBaseManual = this.getBasePrice();
-      var tPriceManualTotal = pBaseManual * this.state.quantity; // Sumamos la cuota total de TODAS las laptops para 1 mes
-      
       var procsHtml = '<select class="ceq-form-input" data-action="change-proc">';
       this.config.processors.forEach(p => { procsHtml += `<option value="${p.id}" ${p.id===this.state.processorId?'selected':''}>${p.label}</option>`; });
       procsHtml += '</select>';
@@ -301,14 +310,13 @@
           <div class="ceq-layout-right">
               <div class="ceq-right-card">
                   <div class="ceq-circle">
-                      <span class="ceq-circle-lbl">CUOTA ${timeLabel}</span>
-                      <span class="ceq-circle-val">${this.config.currency_symbol}${Math.round(tPriceManualTotal)}</span>
-                      <span class="ceq-circle-sub">${this.config.currency_symbol}${Math.round(pBase)} / ${singleUnit} • laptop</span>
+                      <span class="ceq-circle-lbl">TOTAL ${timeLabel}</span>
+                      <span class="ceq-circle-val">${this.config.currency_symbol}${Math.round(tPricePerPeriod)}</span>
+                      <span class="ceq-circle-sub" style="font-size:12px; color:#9ca3af;">${this.config.currency_symbol}${Math.round(pBase)} / ${singleUnit} x ${this.state.quantity} ${qtyLabel}</span>
                   </div>
-                  <div class="ceq-feat-box">
-                      <span class="ceq-feat-eye">SISTEMA OPERATIVO</span>
-                      <span class="ceq-feat-title">WINDOWS PRO INCLUIDO</span>
-                      <span class="ceq-feat-sub">Precios no incluyen IGV</span>
+                  <div style="margin-top:16px; font-weight:700; color:#111827; font-size:16px;">
+                      Inversión Total (${this.state.timeValue} ${this.state.timeUnit}): <br>
+                      <span style="color:#ea580c;">${this.config.currency_symbol}${Math.round(finalPriceAbsolute)}</span>
                   </div>
                   <button class="ceq-btn-primary" style="width:100%; margin-top:24px;" data-action="open-modal">Solicitar Cotización</button>
               </div>
@@ -319,8 +327,6 @@
 
     // Paso 3
     if (this.state.step === 3) {
-      var pBase = this.getBasePrice();
-      var tPriceTotal = pBase * this.state.quantity;
       var proc = this.config.processors.find(p => p.id === this.state.processorId);
       
       body.innerHTML = `
@@ -376,9 +382,9 @@
             <div class="ceq-layout-right">
                 <div class="ceq-right-card">
                     <div class="ceq-circle">
-                        <span class="ceq-circle-lbl">CUOTA ${timeLabel}</span>
-                        <span class="ceq-circle-val">${this.config.currency_symbol}${Math.round(tPriceTotal)}</span>
-                        <span class="ceq-circle-sub">${this.config.currency_symbol}${Math.round(pBase)} / ${singleUnit} • laptop</span>
+                        <span class="ceq-circle-lbl">TOTAL ${timeLabel}</span>
+                        <span class="ceq-circle-val">${this.config.currency_symbol}${Math.round(tPricePerPeriod)}</span>
+                        <span class="ceq-circle-sub" style="font-size:12px; color:#9ca3af;">${this.config.currency_symbol}${Math.round(pBase)} / ${singleUnit} x ${this.state.quantity} ${qtyLabel}</span>
                     </div>
                     <div class="ceq-feat-box">
                         <span class="ceq-feat-eye">SISTEMA OPERATIVO</span>
@@ -393,21 +399,24 @@
 
     // Paso 4
     if (this.state.step === 4) {
-      var finalPrice = this.getBasePrice() * this.state.quantity * this.state.timeValue;
       body.innerHTML = `
         <div class="ceq-layout-split">
             <div class="ceq-layout-left">
                 <div class="ceq-box ceq-box-base" style="border-style:solid;">
-                    <div class="ceq-box-eyebrow">RESUMEN DE COTIZACIÓN</div>
-                    <div class="ceq-box-title" style="font-size:32px; color:#ea580c; margin:8px 0;">${this.config.currency_symbol}${Math.round(finalPrice)}</div>
-                    <div class="ceq-box-desc">Costo total estimado por el lote completo durante ${this.state.timeValue} ${this.state.timeUnit}.</div>
+                    <div class="ceq-box-eyebrow">INVERSIÓN TOTAL ESTIMADA</div>
+                    <div class="ceq-box-title" style="font-size:32px; color:#ea580c; margin:8px 0;">${this.config.currency_symbol}${Math.round(finalPriceAbsolute)}</div>
+                    <div class="ceq-box-desc">Por ${this.state.quantity} ${qtyLabel} durante el periodo completo (${this.state.timeValue} ${this.state.timeUnit}).</div>
+                    <div class="ceq-box-desc" style="margin-top:8px; font-size:13px; font-weight:600;">(Esto equivale a pagos de ${this.config.currency_symbol}${Math.round(tPricePerPeriod)} ${timeLabel.toLowerCase()})</div>
                 </div>
                 <div class="ceq-box" style="padding:16px 24px;">
                     <div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #f3f4f6;">
-                        <span style="color:#6b7280;">Equipos:</span><strong style="color:#111827;">${this.state.quantity} unidades</strong>
+                        <span style="color:#6b7280;">Equipos:</span><strong style="color:#111827;">${this.state.quantity} ${qtyLabel}</strong>
                     </div>
                     <div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #f3f4f6;">
                         <span style="color:#6b7280;">Tiempo:</span><strong style="color:#111827;">${this.state.timeValue} ${this.state.timeUnit}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:12px 0;">
+                        <span style="color:#6b7280;">Costo Unitario:</span><strong style="color:#111827;">${this.config.currency_symbol}${Math.round(pBase)} / ${singleUnit}</strong>
                     </div>
                 </div>
             </div>
