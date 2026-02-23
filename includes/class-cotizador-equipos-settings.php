@@ -109,6 +109,13 @@ class Cotizador_Equipos_Settings {
 					'max_value'   => 12,
 				),
 			),
+			'extras'          => array(
+				array(
+					'id'    => 'extra_1',
+					'label' => '8GB RAM Extra',
+					'price' => '20.00',
+				),
+			),
 			'prices'          => array(),
 		);
 	}
@@ -116,82 +123,43 @@ class Cotizador_Equipos_Settings {
 	public static function sanitize( $raw_settings ) {
 		$defaults = self::get_defaults();
 		$raw      = is_array( $raw_settings ) ? $raw_settings : array();
-
 		$settings = array();
 
-		$currency_map  = array(
-			'PEN' => 'S/.',
-			'USD' => '$',
-			'COP' => '$',
-		);
+		// Moneda
+		$currency_map  = array('PEN' => 'S/.', 'USD' => '$', 'COP' => '$');
 		$currency_code = isset( $raw['currency_code'] ) ? strtoupper( sanitize_text_field( wp_unslash( $raw['currency_code'] ) ) ) : '';
 
 		if ( ! isset( $currency_map[ $currency_code ] ) ) {
-			$raw_symbol = isset( $raw['currency_symbol'] ) ? sanitize_text_field( wp_unslash( $raw['currency_symbol'] ) ) : '';
-			if ( false !== strpos( $raw_symbol, 'S/' ) ) {
-				$currency_code = 'PEN';
-			} elseif ( '$' === $raw_symbol ) {
-				$currency_code = 'USD';
-			} else {
-				$currency_code = $defaults['currency_code'];
-			}
+			$currency_code = $defaults['currency_code'];
 		}
-
 		$settings['currency_code']   = $currency_code;
 		$settings['currency_symbol'] = $currency_map[ $currency_code ];
 
-		$settings['texts'] = self::sanitize_texts(
-			isset( $raw['texts'] ) && is_array( $raw['texts'] ) ? $raw['texts'] : array(),
-			$defaults['texts']
-		);
+		// Sanitizaciones
+		$settings['texts'] = self::sanitize_texts( isset( $raw['texts'] ) && is_array( $raw['texts'] ) ? $raw['texts'] : array(), $defaults['texts'] );
+		$settings['processors'] = self::sanitize_options_list( isset( $raw['processors'] ) ? $raw['processors'] : array(), 'proc', $defaults['processors'] );
+		$settings['gamas'] = self::sanitize_options_list( isset( $raw['gamas'] ) ? $raw['gamas'] : array(), 'gama', $defaults['gamas'] );
+		$settings['periods'] = self::sanitize_periods( isset( $raw['periods'] ) ? $raw['periods'] : array(), 'periodo', $defaults['periods'] );
+		
+		// Nuevo: Extras
+		$settings['extras'] = self::sanitize_extras( isset( $raw['extras'] ) ? $raw['extras'] : array(), 'extra', $defaults['extras'] );
 
-		$settings['processors'] = self::sanitize_options_list(
-			isset( $raw['processors'] ) ? $raw['processors'] : array(),
-			'proc',
-			$defaults['processors']
-		);
-
-		$settings['gamas'] = self::sanitize_options_list(
-			isset( $raw['gamas'] ) ? $raw['gamas'] : array(),
-			'gama',
-			$defaults['gamas']
-		);
-
-		$settings['periods'] = self::sanitize_periods(
-			isset( $raw['periods'] ) ? $raw['periods'] : array(),
-			'periodo',
-			$defaults['periods']
-		);
-
+		// Precios
 		$prices_raw = isset( $raw['prices'] ) && is_array( $raw['prices'] ) ? $raw['prices'] : array();
-		$settings['prices'] = self::sanitize_prices(
-			$prices_raw,
-			$settings['processors'],
-			$settings['gamas'],
-			$settings['periods']
-		);
+		$settings['prices'] = self::sanitize_prices( $prices_raw, $settings['processors'], $settings['gamas'], $settings['periods'] );
 
 		return $settings;
 	}
 
 	private static function sanitize_texts( $texts_raw, $defaults ) {
 		$texts = array();
-
 		foreach ( $defaults as $key => $default_value ) {
-			if ( ! isset( $texts_raw[ $key ] ) ) {
-				$value = '';
-			} elseif ( 'whatsapp_url' === $key ) {
-				$value = esc_url_raw( wp_unslash( $texts_raw[ $key ] ) );
-			} else {
-				$value = sanitize_text_field( wp_unslash( $texts_raw[ $key ] ) );
-			}
-
-			if ( '' === $value ) {
-				$value = $default_value;
-			}
+			if ( ! isset( $texts_raw[ $key ] ) ) { $value = ''; } 
+			elseif ( 'whatsapp_url' === $key ) { $value = esc_url_raw( wp_unslash( $texts_raw[ $key ] ) ); } 
+			else { $value = sanitize_text_field( wp_unslash( $texts_raw[ $key ] ) ); }
+			if ( '' === $value ) { $value = $default_value; }
 			$texts[ $key ] = $value;
 		}
-
 		return $texts;
 	}
 
@@ -201,163 +169,112 @@ class Cotizador_Equipos_Settings {
 		$used_ids  = array();
 
 		foreach ( $items_raw as $index => $item ) {
-			if ( ! is_array( $item ) ) {
-				continue;
-			}
-
+			if ( ! is_array( $item ) ) continue;
 			$label = isset( $item['label'] ) ? sanitize_text_field( wp_unslash( $item['label'] ) ) : '';
-			if ( '' === $label ) {
-				continue;
-			}
+			if ( '' === $label ) continue;
 
 			$front_label = isset( $item['front_label'] ) ? sanitize_text_field( wp_unslash( $item['front_label'] ) ) : '';
 			$description = isset( $item['description'] ) ? sanitize_textarea_field( wp_unslash( $item['description'] ) ) : '';
 			$id          = isset( $item['id'] ) ? sanitize_key( wp_unslash( $item['id'] ) ) : '';
 
-			if ( '' === $id ) {
-				$id = sanitize_title( $label );
-			}
+			if ( '' === $id ) $id = sanitize_title( $label );
+			if ( '' === $id ) $id = $prefix . '_' . ( absint( $index ) + 1 );
 
-			if ( '' === $id ) {
-				$id = $prefix . '_' . ( absint( $index ) + 1 );
-			}
-
-			$base_id = $id;
-			$suffix  = 2;
-			while ( isset( $used_ids[ $id ] ) ) {
-				$id = $base_id . '_' . $suffix;
-				++$suffix;
-			}
-
+			$base_id = $id; $suffix  = 2;
+			while ( isset( $used_ids[ $id ] ) ) { $id = $base_id . '_' . $suffix; ++$suffix; }
 			$used_ids[ $id ] = true;
 
-			$cleaned[] = array(
-				'id'          => $id,
-				'label'       => $label,
-				'front_label' => '' === $front_label ? $label : $front_label,
-				'description' => $description,
-			);
+			$cleaned[] = array( 'id' => $id, 'label' => $label, 'front_label' => '' === $front_label ? $label : $front_label, 'description' => $description );
 		}
-
-		if ( empty( $cleaned ) ) {
-			return $fallback_items;
-		}
-
-		return $cleaned;
+		return empty( $cleaned ) ? $fallback_items : $cleaned;
 	}
 
 	private static function sanitize_periods( $items_raw, $prefix, $fallback_items ) {
-		$items_raw       = is_array( $items_raw ) ? $items_raw : array();
-		$cleaned         = array();
-		$used_ids        = array();
-		$allowed_units   = array( 'dias', 'semanas', 'meses' );
+		$items_raw = is_array( $items_raw ) ? $items_raw : array();
+		$cleaned = array(); $used_ids = array();
+		$allowed_units = array( 'dias', 'semanas', 'meses' );
 
 		foreach ( $items_raw as $index => $item ) {
-			if ( ! is_array( $item ) ) {
-				continue;
-			}
-
+			if ( ! is_array( $item ) ) continue;
 			$label = isset( $item['label'] ) ? sanitize_text_field( wp_unslash( $item['label'] ) ) : '';
-			if ( '' === $label ) {
-				continue;
-			}
+			if ( '' === $label ) continue;
 
-			$front_label = isset( $item['front_label'] ) ? sanitize_text_field( wp_unslash( $item['front_label'] ) ) : '';
-			$description = isset( $item['description'] ) ? sanitize_textarea_field( wp_unslash( $item['description'] ) ) : '';
-			$id          = isset( $item['id'] ) ? sanitize_key( wp_unslash( $item['id'] ) ) : '';
-			$unit        = isset( $item['unit'] ) ? sanitize_key( wp_unslash( $item['unit'] ) ) : 'meses';
-			$min_value   = isset( $item['min_value'] ) ? absint( $item['min_value'] ) : 1;
-			$max_raw     = isset( $item['max_value'] ) ? sanitize_text_field( wp_unslash( $item['max_value'] ) ) : '';
+			$id        = isset( $item['id'] ) ? sanitize_key( wp_unslash( $item['id'] ) ) : '';
+			$unit      = isset( $item['unit'] ) ? sanitize_key( wp_unslash( $item['unit'] ) ) : 'meses';
+			$min_value = isset( $item['min_value'] ) ? absint( $item['min_value'] ) : 1;
+			$max_raw   = isset( $item['max_value'] ) ? sanitize_text_field( wp_unslash( $item['max_value'] ) ) : '';
 
-			if ( '' === $id ) {
-				$id = sanitize_title( $label );
-			}
+			if ( '' === $id ) $id = sanitize_title( $label );
+			if ( '' === $id ) $id = $prefix . '_' . ( absint( $index ) + 1 );
 
-			if ( '' === $id ) {
-				$id = $prefix . '_' . ( absint( $index ) + 1 );
-			}
-
-			$base_id = $id;
-			$suffix  = 2;
-			while ( isset( $used_ids[ $id ] ) ) {
-				$id = $base_id . '_' . $suffix;
-				++$suffix;
-			}
+			$base_id = $id; $suffix = 2;
+			while ( isset( $used_ids[ $id ] ) ) { $id = $base_id . '_' . $suffix; ++$suffix; }
 			$used_ids[ $id ] = true;
 
-			if ( ! in_array( $unit, $allowed_units, true ) ) {
-				$unit = 'meses';
-			}
-
-			if ( $min_value < 1 ) {
-				$min_value = 1;
-			}
+			if ( ! in_array( $unit, $allowed_units, true ) ) $unit = 'meses';
+			if ( $min_value < 1 ) $min_value = 1;
 
 			$max_value = '';
 			if ( '' !== $max_raw ) {
 				$max_value = absint( $max_raw );
-				if ( $max_value > 0 && $max_value < $min_value ) {
-					$max_value = $min_value;
-				}
-				if ( 0 === $max_value ) {
-					$max_value = '';
-				}
+				if ( $max_value > 0 && $max_value < $min_value ) $max_value = $min_value;
+				if ( 0 === $max_value ) $max_value = '';
 			}
 
-			$cleaned[] = array(
-				'id'          => $id,
-				'label'       => $label,
-				'front_label' => '' === $front_label ? $label : $front_label,
-				'description' => $description,
-				'unit'        => $unit,
-				'min_value'   => $min_value,
-				'max_value'   => $max_value,
-			);
+			$cleaned[] = array( 'id' => $id, 'label' => $label, 'unit' => $unit, 'min_value' => $min_value, 'max_value' => $max_value );
 		}
+		return empty( $cleaned ) ? $fallback_items : $cleaned;
+	}
 
-		if ( empty( $cleaned ) ) {
-			return $fallback_items;
+	private static function sanitize_extras( $items_raw, $prefix, $fallback_items ) {
+		$items_raw = is_array( $items_raw ) ? $items_raw : array();
+		$cleaned   = array();
+		$used_ids  = array();
+
+		foreach ( $items_raw as $index => $item ) {
+			if ( ! is_array( $item ) ) continue;
+			$label = isset( $item['label'] ) ? sanitize_text_field( wp_unslash( $item['label'] ) ) : '';
+			if ( '' === $label ) continue;
+
+			$id    = isset( $item['id'] ) ? sanitize_key( wp_unslash( $item['id'] ) ) : '';
+			$price = isset( $item['price'] ) ? sanitize_text_field( wp_unslash( $item['price'] ) ) : '0';
+			$numeric_price = is_numeric($price) ? max( 0, (float) $price ) : 0;
+
+			if ( '' === $id ) $id = sanitize_title( $label );
+			if ( '' === $id ) $id = $prefix . '_' . ( absint( $index ) + 1 );
+
+			$base_id = $id; $suffix = 2;
+			while ( isset( $used_ids[ $id ] ) ) { $id = $base_id . '_' . $suffix; ++$suffix; }
+			$used_ids[ $id ] = true;
+
+			$cleaned[] = array( 'id' => $id, 'label' => $label, 'price' => number_format( $numeric_price, 2, '.', '' ) );
 		}
-
-		return $cleaned;
+		return empty( $cleaned ) ? $fallback_items : $cleaned;
 	}
 
 	private static function sanitize_prices( $prices_raw, $processors, $gamas, $periods ) {
 		$prices = array();
-
 		foreach ( $processors as $processor ) {
 			$processor_id = $processor['id'];
 			$prices[ $processor_id ] = array();
-
 			foreach ( $gamas as $gama ) {
 				$gama_id = $gama['id'];
 				$prices[ $processor_id ][ $gama_id ] = array();
-
 				foreach ( $periods as $period ) {
 					$period_id = $period['id'];
 					$value     = '';
-
-					if (
-						isset( $prices_raw[ $processor_id ] ) &&
-						is_array( $prices_raw[ $processor_id ] ) &&
-						isset( $prices_raw[ $processor_id ][ $gama_id ] ) &&
-						is_array( $prices_raw[ $processor_id ][ $gama_id ] ) &&
-						isset( $prices_raw[ $processor_id ][ $gama_id ][ $period_id ] )
-					) {
+					if ( isset( $prices_raw[ $processor_id ][ $gama_id ][ $period_id ] ) ) {
 						$raw_price = wp_unslash( $prices_raw[ $processor_id ][ $gama_id ][ $period_id ] );
 						$raw_price = is_scalar( $raw_price ) ? str_replace( ',', '.', (string) $raw_price ) : '';
-
 						if ( '' !== $raw_price ) {
 							$numeric_price = max( 0, (float) $raw_price );
 							$value         = number_format( $numeric_price, 2, '.', '' );
 						}
 					}
-
 					$prices[ $processor_id ][ $gama_id ][ $period_id ] = $value;
 				}
 			}
 		}
-
 		return $prices;
 	}
 }

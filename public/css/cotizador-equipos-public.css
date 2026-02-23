@@ -167,3 +167,23 @@
     .ce-cotizador .ceq-footer { flex-direction: column-reverse ; gap: 20px ; }
     .ce-cotizador .ceq-btn-primary { width: 100% ; }
 }
+
+
+
+/* ANIMACIÓN DE SALIDA DEL MODAL */
+.ce-cotizador .ceq-modal-overlay.is-closing {
+    animation: modalFadeOut 0.3s ease forwards;
+}
+.ce-cotizador .ceq-modal-overlay.is-closing .ceq-modal-box {
+    animation: modalSlideDown 0.3s ease forwards;
+}
+
+@keyframes modalFadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes modalSlideDown {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(20px); opacity: 0; }
+}

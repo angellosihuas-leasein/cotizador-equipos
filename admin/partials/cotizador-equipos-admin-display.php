@@ -13,7 +13,7 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 		<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 mt-4 gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
 			<div>
 				<h1 class="text-2xl font-semibold text-slate-900 m-0">Reglas y Precios del Cotizador</h1>
-				<p class="text-sm text-slate-500 mt-1 m-0">Configura los pasos, opciones y reglas de cálculo de tu cotizador.</p>
+				<p class="text-sm text-slate-500 mt-1 m-0">Configura los pasos, opciones, extras y reglas de cálculo de tu cotizador.</p>
 			</div>
 			<div class="flex flex-col sm:flex-row items-stretch gap-4">
 				<div class="flex items-center gap-2 bg-slate-50 px-4 rounded-lg border border-slate-200 h-[44px]">
@@ -62,6 +62,7 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 
 		<div x-show="tab === 'configuracion'" style="display: none;">
 			<div class="grid grid-cols-1 gap-6">
+				
 				<div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
 					<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
 						<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-5 text-slate-800 m-0">Opciones: Paso 1 (Procesador)</h2>
@@ -108,7 +109,33 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 						</div>
 						<button type="button" @click="addItem('gamas')" class="mt-4 text-sm font-medium text-orange-600 bg-white border border-orange-200 py-2 px-4 rounded-lg cursor-pointer hover:bg-orange-50">+ Añadir Opción</button>
 					</div>
-				</div>
+
+					<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 xl:col-span-2">
+						<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-5 text-slate-800 m-0">Extras / Adicionales Opcionales</h2>
+						<p class="text-sm text-slate-500 mb-4">Añade componentes o mejoras adicionales que el usuario podrá sumar a su cotización desde el "Modo Manual".</p>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<template x-for="(extra, index) in formData.extras" :key="extra.id">
+								<div class="p-4 border border-slate-200 rounded-lg bg-slate-50">
+									<div class="grid grid-cols-1 xl:grid-cols-2 gap-3 mb-2">
+										<div>
+											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Nombre del extra</label>
+											<input type="text" x-model="extra.label" class="w-full font-medium border border-slate-200 rounded p-2 text-sm outline-none focus:border-orange-500" placeholder="Ej: 8GB RAM Extra">
+										</div>
+										<div>
+											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Precio Adicional</label>
+											<div class="relative flex items-center">
+												<span class="absolute left-3 text-slate-400 text-sm font-medium" x-text="simboloDivisa"></span>
+												<input type="number" step="0.01" x-model="extra.price" class="w-full border border-slate-300 rounded p-2 pl-9 text-sm outline-none focus:border-orange-500 font-bold" placeholder="0.00">
+											</div>
+										</div>
+									</div>
+									<div class="flex justify-end mt-2"><button type="button" @click="removeItem('extras', index)" class="text-xs text-red-500 font-semibold cursor-pointer border-none bg-transparent hover:underline">Eliminar Extra</button></div>
+								</div>
+							</template>
+						</div>
+						<button type="button" @click="addItem('extras')" class="mt-4 text-sm font-medium text-orange-600 bg-white border border-orange-200 py-2 px-4 rounded-lg cursor-pointer hover:bg-orange-50">+ Añadir Extra</button>
+					</div>
+					</div>
 
 				<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
 					<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-4 text-slate-800 m-0">Reglas de Periodos de Alquiler</h2>
@@ -204,7 +231,8 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 			tab: 'configuracion',
 			initialSettings: <?php echo $settings_json; ?>,
 			simboloDivisa: 'S/.',
-			formData: { currency_code: 'PEN', currency_symbol: 'S/.', texts: {}, processors: [], gamas: [], periods: [], prices: {} },
+			// Se agrego extras a la estructura de formData
+			formData: { currency_code: 'PEN', currency_symbol: 'S/.', texts: {}, processors: [], gamas: [], periods: [], extras: [], prices: {} },
 
 			init() {
 				const incoming = this.initialSettings && typeof this.initialSettings === 'object' ? this.initialSettings : {};
@@ -213,6 +241,7 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 				this.formData.processors = this.normalizeItems(incoming.processors, 'proc');
 				this.formData.gamas = this.normalizeItems(incoming.gamas, 'gama');
 				this.formData.periods = this.normalizePeriods(incoming.periods);
+				this.formData.extras = this.normalizeExtras(incoming.extras); // Se inicializan los extras guardados
 				this.formData.prices = incoming.prices || {};
 				this.actualizarSimbolo();
 				this.normalizePrices();
@@ -239,6 +268,15 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 				}));
 			},
 
+			normalizeExtras(rawItems) {
+				const source = Array.isArray(rawItems) ? rawItems : [];
+				return source.map((item, idx) => ({
+					id: item.id || 'extra_' + (idx + 1),
+					label: item.label || '',
+					price: item.price || '0.00'
+				}));
+			},
+
 			actualizarSimbolo() {
 				const map = { PEN: 'S/.', USD: '$', COP: '$' };
 				this.simboloDivisa = map[this.formData.currency_code] || 'S/.';
@@ -250,6 +288,8 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 				let id = type + '_' + Date.now();
 				if (type === 'periods') {
 					list.push({ id: id, label: '', unit: 'meses', min_value: 1, max_value: '' });
+				} else if (type === 'extras') {
+					list.push({ id: id, label: '', price: '0.00' });
 				} else {
 					list.push({ id: id, label: '', front_label: '', description: '' });
 				}
