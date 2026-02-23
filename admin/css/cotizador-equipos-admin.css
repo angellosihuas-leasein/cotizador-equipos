@@ -1,0 +1,221 @@
+.ce-admin-wrap {
+	max-width: 1180px;
+	margin: 24px 20px 24px 0;
+	color: #111827;
+}
+
+.ce-admin-header h1 {
+	margin: 0;
+	font-size: 28px;
+	line-height: 1.2;
+}
+
+.ce-admin-header p {
+	margin: 8px 0 0;
+	color: #6b7280;
+	font-size: 14px;
+}
+
+.ce-admin-notice {
+	background: #f0fdf4;
+	border: 1px solid #86efac;
+	color: #166534;
+	padding: 10px 14px;
+	border-radius: 10px;
+	margin: 18px 0;
+}
+
+.ce-card {
+	background: #fff;
+	border: 1px solid #e5e7eb;
+	border-radius: 16px;
+	padding: 20px;
+	margin-top: 16px;
+}
+
+.ce-card-title {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin-bottom: 14px;
+}
+
+.ce-card-title h2 {
+	margin: 0;
+	font-size: 17px;
+}
+
+.ce-card-title p {
+	margin: 0;
+	font-size: 13px;
+	color: #6b7280;
+}
+
+.ce-form-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 12px;
+}
+
+.ce-step-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+	margin-bottom: 14px;
+}
+
+.ce-span-2 {
+	grid-column: 1 / -1;
+}
+
+.ce-card label {
+	display: block;
+}
+
+.ce-card label span {
+	display: block;
+	font-size: 12px;
+	font-weight: 600;
+	color: #4b5563;
+	margin-bottom: 6px;
+}
+
+.ce-card input[type="text"],
+.ce-card input[type="number"],
+.ce-card textarea {
+	width: 100%;
+	border: 1px solid #d1d5db;
+	border-radius: 10px;
+	padding: 9px 11px;
+	font-size: 14px;
+}
+
+.ce-card textarea {
+	resize: vertical;
+}
+
+.ce-card input:focus,
+.ce-card textarea:focus {
+	outline: none;
+	border-color: #f97316;
+	box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.14);
+}
+
+.ce-list {
+	display: grid;
+	gap: 10px;
+	margin-bottom: 10px;
+}
+
+.ce-list-item {
+	border: 1px solid #e5e7eb;
+	border-radius: 12px;
+	padding: 12px;
+	background: #fafafa;
+}
+
+.ce-list-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.ce-list-row > label {
+	flex: 1;
+}
+
+.ce-id {
+	margin: 8px 0 0;
+	font-size: 12px;
+	color: #6b7280;
+}
+
+.ce-btn-secondary {
+	border: 1px solid #d1d5db;
+	background: #fff;
+}
+
+.ce-btn-link {
+	color: #b91c1c;
+	border: 0;
+	background: transparent;
+}
+
+.ce-btn-link:hover {
+	color: #991b1b;
+}
+
+.ce-table-wrap {
+	overflow-x: auto;
+}
+
+.ce-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 14px;
+}
+
+.ce-table th,
+.ce-table td {
+	border-bottom: 1px solid #e5e7eb;
+	padding: 10px 8px;
+	text-align: left;
+	vertical-align: middle;
+}
+
+.ce-table th {
+	color: #4b5563;
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.ce-price-field {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.ce-price-field span {
+	color: #6b7280;
+	font-weight: 600;
+	min-width: 24px;
+}
+
+.ce-price-field input {
+	min-width: 120px;
+}
+
+.ce-empty {
+	padding: 12px;
+	background: #fff7ed;
+	border: 1px solid #fed7aa;
+	color: #9a3412;
+	border-radius: 10px;
+}
+
+.ce-form-footer {
+	margin-top: 18px;
+	display: flex;
+	justify-content: flex-end;
+}
+
+.ce-btn-primary {
+	background: #f97316;
+	border-color: #f97316;
+	padding: 6px 20px;
+}
+
+.ce-btn-primary:hover {
+	background: #ea580c;
+	border-color: #ea580c;
+}
+
+@media (max-width: 900px) {
+	.ce-form-grid,
+	.ce-step-grid {
+		grid-template-columns: 1fr;
+	}
+}
