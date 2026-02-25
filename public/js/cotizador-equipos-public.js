@@ -34,8 +34,10 @@
     };
   }
 
-  CotizadorUI.prototype.mount = function () {
+CotizadorUI.prototype.mount = function () {
+    // 1. Creamos el HTML base normalmente (sin guardar referencias raras)
     this.root.innerHTML = '<div class="ce-cotizador-wrapper"><div class="ceq-stage"><div class="ceq-header"></div><div class="ceq-body"></div><div class="ceq-footer"></div></div><div class="ceq-modal-root"></div></div>';
+    
     this.bindEvents();
     this.render();
   };
@@ -137,6 +139,12 @@ this.root.addEventListener("submit", function(e) {
   };
 
   CotizadorUI.prototype.render = function () {
+    var currentWrapper = this.root.querySelector(".ce-cotizador-wrapper");
+    if (currentWrapper) {
+        // Mantiene la clase base + agrega step-N
+        currentWrapper.className = "ce-cotizador-wrapper step-" + this.state.step;
+    }
+
     this.renderHeader();
     this.renderBody();
     this.renderFooter();
@@ -159,13 +167,42 @@ this.root.addEventListener("submit", function(e) {
     this.root.querySelector(".ceq-header").innerHTML = '<span class="ceq-eyebrow">' + (st.eye || '') + '</span><h2 class="ceq-title">' + (st.title || '') + '</h2><p class="ceq-subtitle">' + (st.sub || '') + '</p>';
   };
 
-  CotizadorUI.prototype.getIcon = function(step, i) {
-    return ''; 
-  };
+    CotizadorUI.prototype.getIcon = function(step, i) {
+    // SVGs por paso e índice (i)
+    var icons = {
+        1: [ // Step 1 (processors)
+        `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M16.6667 2.5H3.33341C2.41294 2.5 1.66675 3.24619 1.66675 4.16667V12.5C1.66675 13.4205 2.41294 14.1667 3.33341 14.1667H16.6667C17.5872 14.1667 18.3334 13.4205 18.3334 12.5V4.16667C18.3334 3.24619 17.5872 2.5 16.6667 2.5Z" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M6.66675 17.5H13.3334" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M10 14.1666V17.5" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`,
+        `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M15 13.3333L18.3333 9.99996L15 6.66663" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M5.00008 6.66663L1.66675 9.99996L5.00008 13.3333" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12.0834 3.33337L7.91675 16.6667" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`
+        ],
+        2: [ // Step 2 (gamas)
+        `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M16.6667 2.5H3.33341C2.41294 2.5 1.66675 3.24619 1.66675 4.16667V12.5C1.66675 13.4205 2.41294 14.1667 3.33341 14.1667H16.6667C17.5872 14.1667 18.3334 13.4205 18.3334 12.5V4.16667C18.3334 3.24619 17.5872 2.5 16.6667 2.5Z" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M6.66675 17.5H13.3334" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M10 14.1666V17.5" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`,
+        `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M16.6667 2.5H3.33341C2.41294 2.5 1.66675 3.24619 1.66675 4.16667V12.5C1.66675 13.4205 2.41294 14.1667 3.33341 14.1667H16.6667C17.5872 14.1667 18.3334 13.4205 18.3334 12.5V4.16667C18.3334 3.24619 17.5872 2.5 16.6667 2.5Z" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M6.66675 17.5H13.3334" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M10 14.1666V17.5" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`,
+        ]
+    };
+
+    // Devuelve SVG o vacío si no existe
+    return (icons[step] && icons[step][i]) ? icons[step][i] : '';
+    };
 
   CotizadorUI.prototype.getRadioSvg = function(isSelected) {
-      if(isSelected) return '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="#ea580c" stroke-width="2" fill="#ea580c"/><circle cx="12" cy="12" r="4" fill="white"/></svg>';
-      return '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="#e5e7eb" stroke-width="2" fill="white"/></svg>';
+      if(isSelected) return '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><mask id="path-1-inside-1_1072_532" fill="white"><path d="M0 10C0 4.47715 4.47715 0 10 0C15.5228 0 20 4.47715 20 10C20 15.5228 15.5228 20 10 20C4.47715 20 0 15.5228 0 10Z"/></mask><path d="M0 10C0 4.47715 4.47715 0 10 0C15.5228 0 20 4.47715 20 10C20 15.5228 15.5228 20 10 20C4.47715 20 0 15.5228 0 10Z" fill="#FE5000"/><path d="M0 10M20 10M20 10M0 10M10 0M20 10M10 20M0 10M10 20V18C5.58172 18 2 14.4183 2 10H0H-2C-2 16.6274 3.37258 22 10 22V20ZM20 10H18C18 14.4183 14.4183 18 10 18V20V22C16.6274 22 22 16.6274 22 10H20ZM10 0V2C14.4183 2 18 5.58172 18 10H20H22C22 3.37258 16.6274 -2 10 -2V0ZM10 0V-2C3.37258 -2 -2 3.37258 -2 10H0H2C2 5.58172 5.58172 2 10 2V0Z" fill="#FE5000" mask="url(#path-1-inside-1_1072_532)"/><path d="M6.5 10.5L8.5 12.5L13.5 7.5" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      return '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><mask id="path-1-inside-1_1165_292" fill="white"><path d="M0 10C0 4.47715 4.47715 0 10 0C15.5228 0 20 4.47715 20 10C20 15.5228 15.5228 20 10 20C4.47715 20 0 15.5228 0 10Z"/></mask><path d="M0 10M20 10M20 10M0 10M10 0M20 10M10 20M0 10M10 20V18C5.58172 18 2 14.4183 2 10H0H-2C-2 16.6274 3.37258 22 10 22V20ZM20 10H18C18 14.4183 14.4183 18 10 18V20V22C16.6274 22 22 16.6274 22 10H20ZM10 0V2C14.4183 2 18 5.58172 18 10H20H22C22 3.37258 16.6274 -2 10 -2V0ZM10 0V-2C3.37258 -2 -2 3.37258 -2 10H0H2C2 5.58172 5.58172 2 10 2V0Z" fill="#F6F7F9" mask="url(#path-1-inside-1_1165_292)"/></svg>';
   }
 
   CotizadorUI.prototype.renderBody = function () {
@@ -180,12 +217,31 @@ this.root.addEventListener("submit", function(e) {
                     <h1 class="ceq-title ceq-welcome-title">${t.welcome_title || 'Cotiza el alquiler de laptops para tu empresa en segundos'}</h1>
                     <p class="ceq-subtitle ceq-welcome-subtitle">${t.welcome_subtitle || 'Obtén precios al instante con nuestro cotizador digital o configura una propuesta técnica a medida.'}</p>
                     <div class="ceq-welcome-actions">
-                        <button class="ceq-btn-primary" data-action="start-smart">${t.btn_smart || 'Iniciar cotización inteligente →'}</button>
-                        <button class="ceq-btn-outline" data-action="go-manual"><svg style="width:24px;height:24px;margin-right:8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor"><g class="ceq-slider-top"><line x1="6" y1="8" x2="20" y2="8" stroke-width="2.5" stroke-linecap="round"></line><circle cx="6" cy="8" r="2.5" fill="#ffffff" class="ceq-slider-circle" stroke-width="2.5"></circle></g><g class="ceq-slider-bottom"><line x1="4" y1="16" x2="18" y2="16" stroke-width="2.5" stroke-linecap="round"></line><circle cx="18" cy="16" r="2.5" fill="#ffffff" class="ceq-slider-circle" stroke-width="2.5"></circle></g></svg>${t.btn_manual || 'Configura aquí'}</button>
+                        <button class="ceq-btn-primary" data-action="start-smart">
+                            ${t.btn_smart || 'Iniciar cotización inteligente'}
+                            <svg class="ceq-icon-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </button>
+                        
+                        <button class="ceq-btn-outline" data-action="go-manual">
+                            <svg style="width:24px;height:24px;margin-right:8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <g class="ceq-slider-top">
+                                    <line x1="6" y1="8" x2="20" y2="8" stroke-width="2.5" stroke-linecap="round"></line>
+                                    <circle cx="6" cy="8" r="2.5" fill="#ffffff" class="ceq-slider-circle" stroke-width="2.5"></circle>
+                                </g>
+                                <g class="ceq-slider-bottom">
+                                    <line x1="4" y1="16" x2="18" y2="16" stroke-width="2.5" stroke-linecap="round"></line>
+                                    <circle cx="18" cy="16" r="2.5" fill="#ffffff" class="ceq-slider-circle" stroke-width="2.5"></circle>
+                                </g>
+                            </svg>
+                            ${t.btn_manual || 'Configura aquí'}
+                        </button>
                     </div>
                 </div>
                 <div class="ceq-welcome-visual">
-                    <img src="./img/yosellin.png" alt="Especialista" class="ceq-welcome-img" />
+                    <img src="${cotizadorData.pluginUrl}img/yosellin.png" alt="Especialista" class="ceq-welcome-img" />
                 </div>
             </div>
         `;
@@ -205,8 +261,8 @@ this.root.addEventListener("submit", function(e) {
         var isSelected = item.id === selectedId;
         var displayTitle = (item.front_label && item.front_label.trim() !== "") ? item.front_label : item.label;
         html += '<button type="button" class="ceq-option ' + (isSelected ? "is-selected" : "") + '" data-action="' + action + '" data-value="' + item.id + '">' +
-                '<span class="ceq-opt-icon">' + self.getIcon(self.state.step, i) + '</span>' +
-                '<span class="ceq-opt-main"><span class="ceq-opt-title">' + displayTitle + '</span><span class="ceq-opt-desc">' + item.description + '</span></span>' +
+                '<div class="ceq-icon-wrapper"><span class="ceq-opt-icon">' + self.getIcon(self.state.step, i) + '</span>' +
+                '<span class="ceq-opt-main"><span class="ceq-opt-title">' + displayTitle + '</span><span class="ceq-opt-desc">' + item.description + '</span></span></div>' +
                 '<span class="ceq-opt-radio">' + self.getRadioSvg(isSelected) + '</span></button>';
       });
       body.innerHTML = html + '</div>' + waBtn + manualLink;
