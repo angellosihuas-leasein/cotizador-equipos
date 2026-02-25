@@ -322,3 +322,237 @@
     .ce-cotizador .ceq-welcome-visual { min-height: 300px; margin-top: 20px; }
     .ce-cotizador .ceq-welcome-img { max-height: 340px; }
 }
+
+/* --- ANIMACIONES DE MODAL --- */
+.ceq-anim-container {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 480px;
+}
+
+.form-wrapper {
+    width: 100%;
+    transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.6s ease-in-out;
+    transform-origin: center center;
+    z-index: 10;
+}
+
+.form-animate-out {
+    transform: scale(0.15) translateX(800px) rotate(15deg);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.success-wrapper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s, opacity 0.4s ease-out 0.5s;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.success-animate-in {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.mail__rect {
+    stroke-dasharray: 70;
+    stroke-dashoffset: 70;
+    transition: stroke-dashoffset 0.6s ease-out 0.8s;
+}
+
+.mail__path {
+    stroke-dasharray: 25;
+    stroke-dashoffset: 25;
+    transition: stroke-dashoffset 0.4s ease-out 1.2s;
+}
+
+.draw-svg .mail__rect,
+.draw-svg .mail__path {
+    stroke-dashoffset: 0;
+}
+
+.loading-btn {
+    opacity: 0.8;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+.loading-btn .btn-text { display: none; }
+.loading-btn .loader { display: inline-block; }
+
+.loader {
+    display: none;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top: 3px solid white;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+}
+
+/* --- LAYOUT DEL PASO 4 --- */
+.ceq-step4-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding: 20px 0;
+}
+
+.ceq-step4-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    padding: 20px;
+}
+
+.ceq-step4-price-circle {
+    background: #ffffff;
+    border-radius: 50%;
+    width: 320px;
+    height: 320px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+    z-index: 2;
+    padding: 30px;
+}
+
+.ceq-s4-lbl {
+    font-size: 18px;
+    font-weight: 700;
+    color: #6b7280;
+    line-height: 1.2;
+    margin-bottom: 8px;
+}
+
+.ceq-s4-specs {
+    font-size: 14px;
+    color: #9ca3af;
+    margin-bottom: 15px;
+}
+
+.ceq-s4-price {
+    font-size: 70px;
+    font-weight: 800;
+    color: #374151;
+    line-height: 1;
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+}
+
+.ceq-s4-price span {
+    font-size: 35px;
+    margin-top: 10px;
+}
+
+.ceq-s4-disc {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 15px;
+}
+
+.ceq-step4-images {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50%;
+    height: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    z-index: 1;
+}
+
+.ceq-step4-features {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 30px;
+    display: flex;
+    justify-content: space-between;
+    border: 1px solid #f3f4f6;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+
+.ceq-feat-item {
+    text-align: center;
+    flex: 1;
+    padding: 0 15px;
+}
+
+.ceq-feat-icon {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 15px auto;
+    color: #ea580c;
+}
+
+.ceq-feat-item p {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.ceq-s4-footer-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.ceq-s4-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.ceq-btn-ghost-dark {
+    background: transparent;
+    border: none;
+    color: #6b7280;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.ceq-s4-btn {
+    font-size: 18px;
+    padding: 16px 32px;
+    background: #ea580c;
+    border-radius: 30px;
+}
+
+.ceq-s4-manual-link {
+    font-size: 15px;
+    color: #6b7280;
+}
+
+.ceq-s4-manual-link button {
+    background: transparent;
+    border: none;
+    color: #ea580c;
+    text-decoration: underline;
+    font-weight: 600;
+    cursor: pointer;
+}

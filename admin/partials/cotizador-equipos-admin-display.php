@@ -54,12 +54,9 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 					</div>
 				</div>
 				<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-					<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-5 text-slate-800 m-0">Textos Paso 1, 2 y WhatsApp</h2>
+					<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-5 text-slate-800 m-0">Textos WhatsApp (Paso 1)</h2>
 					<div class="space-y-3">
-						<label class="block text-xs font-semibold text-slate-500">Títulos de pasos</label>
-						<input type="text" x-model="formData.texts.step1_title" class="w-full font-medium border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-orange-500" placeholder="Título Paso 1">
-						<input type="text" x-model="formData.texts.step2_title" class="w-full font-medium border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-orange-500" placeholder="Título Paso 2">
-						<label class="block text-xs font-semibold text-slate-500 mt-3">WhatsApp (Paso 1)</label>
+						<label class="block text-xs font-semibold text-slate-500">WhatsApp (Paso 1)</label>
 						<input type="text" x-model="formData.texts.whatsapp_label" class="w-full font-medium border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-orange-500" placeholder="Título botón">
 						<input type="text" x-model="formData.texts.whatsapp_desc" class="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-orange-500" placeholder="Subtítulo whatsapp">
 						<input type="text" x-model="formData.texts.whatsapp_url" class="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-orange-500" placeholder="Enlace wa.me/...">
