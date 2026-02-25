@@ -174,21 +174,37 @@
     var t = this.config.texts || {};
 
     // Paso 0: Bienvenida (Agregando validación de datos seguros)
+
     if (this.state.step === 0) {
-        var wTitle = t.welcome_title || 'Cotiza el alquiler de laptops <span style="color:#ea580c;">para tu empresa</span> en segundos.';
+        var wTitle = t.welcome_title || 'Cotiza el alquiler de laptops para tu empresa en segundos';
         var wSub = t.welcome_subtitle || 'Obtén precios al instante con nuestro cotizador digital o configura una propuesta técnica a medida.';
         var wBtnSmart = t.btn_smart || 'Iniciar cotización inteligente →';
         var wBtnManual = t.btn_manual || 'Configura aquí';
-        var wEyebrow = t.welcome_eyebrow || 'COTIZADOR DIGITAL';
 
         body.innerHTML = `
             <div class="ceq-welcome-wrap">
-                <span class="ceq-eyebrow ceq-badge-eyebrow">${wEyebrow}</span>
-                <h1 class="ceq-title ceq-welcome-title">${wTitle}</h1>
-                <p class="ceq-subtitle ceq-welcome-subtitle">${wSub}</p>
-                <div class="ceq-welcome-actions">
-                    <button class="ceq-btn-primary" data-action="start-smart">${wBtnSmart}</button>
-                    <button class="ceq-btn-outline" data-action="go-manual"><svg style="width:20px;height:20px;margin-right:8px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg> ${wBtnManual}</button>
+                <div class="ceq-welcome-content">
+                    <h1 class="ceq-title ceq-welcome-title">${wTitle}</h1>
+                    <p class="ceq-subtitle ceq-welcome-subtitle">${wSub}</p>
+                    <div class="ceq-welcome-actions">
+                        <button class="ceq-btn-primary" data-action="start-smart">${wBtnSmart}</button>
+                        <button class="ceq-btn-outline" data-action="go-manual">
+                            <svg style="width:24px;height:24px;margin-right:8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <g class="ceq-slider-top">
+                                    <line x1="6" y1="8" x2="20" y2="8" stroke-width="2.5" stroke-linecap="round"></line>
+                                    <circle cx="6" cy="8" r="2.5" fill="#ffffff" class="ceq-slider-circle" stroke-width="2.5"></circle>
+                                </g>
+                                <g class="ceq-slider-bottom">
+                                    <line x1="4" y1="16" x2="18" y2="16" stroke-width="2.5" stroke-linecap="round"></line>
+                                    <circle cx="18" cy="16" r="2.5" fill="#ffffff" class="ceq-slider-circle" stroke-width="2.5"></circle>
+                                </g>
+                            </svg> 
+                            ${wBtnManual}
+                        </button>
+                    </div>
+                </div>
+                <div class="ceq-welcome-visual">
+                    <img src="URL_DE_LA_FOTO_AQUI.png" alt="Especialista" class="ceq-welcome-img" />
                 </div>
             </div>
         `;
@@ -219,7 +235,7 @@
                 '<span class="ceq-opt-main"><span class="ceq-opt-title">' + displayTitle + '</span><span class="ceq-opt-desc">' + item.description + '</span></span>' +
                 '<span class="ceq-opt-radio">' + self.getRadioSvg(isSelected) + '</span></button>';
       });
-      body.innerHTML = html + '</div>' + manualLink + waBtn;
+      body.innerHTML = html + '</div>' + waBtn + manualLink;
       return;
     }
 
