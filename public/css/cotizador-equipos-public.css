@@ -2,10 +2,15 @@
     all: initial;
 }
 .ce-cotizador-wrapper.step-1,
-.ce-cotizador-wrapper.step-2,
+.ce-cotizador-wrapper.step-2{
+    max-width: 576px;
+    margin: auto;
+    display: block;
+}
+
 .ce-cotizador-wrapper.step-3,
 .ce-cotizador-wrapper.step-4 {
-    max-width: 576px;
+    max-width: 670px;
     margin: auto;
     display: block;
 }
@@ -84,16 +89,24 @@
     max-width: 600px;
 }
 .ce-cotizador .ceq-whatsapp-cta {
-    width: 100%;
-    border: 1px solid #fe5000;
-    border-radius: 16px;
-    background-color: #fff7ed;
-    padding: 24px 28px;
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 20px;
+    padding: 16px 16px;
+    background-color: #fff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 16px;
+    transition: 0.3s ease all;
+    width: 100%;
+    text-align: left;
+    justify-content: space-between;
     margin-top: 24px;
-    transition: all 0.2s ease;
+}
+.wsp-wrapper-text{
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    white-space: break-spaces;
 }
 .ce-cotizador .ceq-whatsapp-cta:hover {
     transform: translateY(-2px);
@@ -164,7 +177,8 @@
 .ceq-icon-wrapper{
     display: flex;
     gap: 15px;
-    align-items: center;;
+    align-items: center;
+    white-space: break-spaces;
 }
 .ce-cotizador .ceq-opt-icon {
     display: flex;
@@ -209,8 +223,8 @@
 }
 .ce-cotizador .ceq-layout-split {
     display: grid;
-    grid-template-columns: 1fr 340px;
-    gap: 32px;
+    grid-template-columns: 1.4fr 260px;
+    gap: 15px;
     align-items: flex-start;
 }
 .ce-cotizador .ceq-box {
