@@ -16,7 +16,7 @@
   function initCotizadores() {
 
     loadLottieScript();
-    
+
     var containers = document.querySelectorAll(".ce-cotizador[data-ce-config]");
     containers.forEach(function (container) {
       if (!container.getAttribute("data-ce-config")) return;
@@ -373,7 +373,7 @@ this.root.addEventListener("submit", function(e) {
 
                 <div id="successView" class="success-wrapper">
                     <lottie-player 
-                        src="animacion.json" 
+                        src="${cotizadorData.pluginUrl}js/animacion.json" 
                         background="transparent" 
                         speed="1" 
                         style="width: 100px; height: 100px;" 

@@ -41,7 +41,16 @@ class Cotizador_Equipos_Public {
 
 		$this->register_assets();
 		wp_enqueue_style( $this->plugin_name . '-public' );
+
 		wp_enqueue_script( $this->plugin_name . '-public' );
+
+		wp_localize_script(
+			$this->plugin_name . '-public',
+			'cotizadorData',
+			array(
+				'pluginUrl' => plugin_dir_url( __FILE__ )
+			)
+		);
 
 		ob_start();
 		?>
