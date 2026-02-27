@@ -707,6 +707,7 @@
   font-size: 14px;
   color: #111827;
   transition: all 0.2s;
+  outline: none !important;
 }
 
 .ce-cotizador .ceq-form-input:focus {
@@ -1391,6 +1392,12 @@
   width: 100%;
 }
 .ce-cotizador-wrapper.step-3 .wrapper-stps-btns,
-.ce-cotizador-wrapper.step-4 .wrapper-stps-btns{
+.ce-cotizador-wrapper.step-4 .wrapper-stps-btns,
+.ce-cotizador-wrapper.step-5 .wrapper-stps-btns{
   justify-content: space-between;
 }
+.ceq-layout-left{
+  max-height: 440px;
+  overflow-y: scroll;
+}
+

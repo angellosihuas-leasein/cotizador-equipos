@@ -15,7 +15,6 @@
   function initCotizadores() {
     loadLottieScript();
     
-
     var containers = document.querySelectorAll(".ce-cotizador[data-ce-config]");
     containers.forEach(function (container) {
       if (!container.getAttribute("data-ce-config")) return;
@@ -41,7 +40,6 @@
       timeUnit: "meses",
       timeValue: 1,
       quantity: 1,
-      selectedExtras: { ram: "", almacenamiento: "" },
       isModalOpen: false,
     };
   }
@@ -110,7 +108,6 @@
         self.state.step = 0;
         self.state.quantity = 1;
         self.state.timeValue = 1;
-        self.state.selectedExtras = { ram: "", almacenamiento: "" };
         self.goToStep(0);
       }
 
@@ -179,7 +176,7 @@
       }
     });
 
-    // Validaciones de Entrada en Tiempo Real
+    // Validaciones
     this.root.addEventListener("input", function(e) {
         if (e.target.name === "nombre") {
             e.target.value = e.target.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ ]/g, "");
@@ -188,7 +185,6 @@
         if (e.target.name === "ruc") {
              e.target.value = e.target.value.replace(/\D/g, ''); 
              self.clearError(e.target);
-             
              if(e.target.value.length > 0 && e.target.value[0] !== '2') {
                  self.showError(e.target, "El RUC debe comenzar con 20");
              }
@@ -196,7 +192,6 @@
         if (e.target.name === "telefono") {
             e.target.value = e.target.value.replace(/\D/g, '');
             self.clearError(e.target);
-            
             if(e.target.value.length > 0 && e.target.value[0] !== '9') {
                  self.showError(e.target, "El número debe empezar con 9");
              }
@@ -206,7 +201,6 @@
         }
     });
 
-    // Validar al perder el foco
     this.root.addEventListener("focusout", function(e) {
         if(e.target.name === "ruc" && e.target.value.length > 0 && e.target.value.length < 11) {
              self.showError(e.target, "El RUC debe tener 11 dígitos");
@@ -221,12 +215,8 @@
         e.preventDefault();
         var formEl = e.target;
         
-        // Anti-spam Honeypot Check
         var honeypot = formEl.querySelector('[name="website_url"]');
-        if(honeypot && honeypot.value !== '') {
-            console.warn("Bot detectado");
-            return; // Bloqueo silencioso
-        }
+        if(honeypot && honeypot.value !== '') { return; }
 
         var btn = formEl.querySelector('button[type="submit"]');
         var successEl = self.root.querySelector("#successView");
@@ -249,7 +239,6 @@
             var formData = new FormData(formEl);
             formData.append('action', 'cotizador_enviar');
             formData.append('nonce', cotizadorWP.nonce);
-            
             formData.append('procesador_id', self.state.processorId);
             formData.append('gama_id', self.state.gamaId);
             formData.append('cantidad', self.state.quantity);
@@ -303,7 +292,6 @@
         self.state.mode = "smart";
         self.state.quantity = 1;
         self.state.timeValue = 1;
-        self.state.selectedExtras = { ram: "", almacenamiento: "" };
         self.state.processorId = null;
         self.state.gamaId = null;
         self.render();
@@ -360,7 +348,7 @@
       5: {
         eye: "MODO MANUAL",
         title: t.manual_title || "Configuración Rápida",
-        sub: "Personaliza tu equipo, extras y tiempo al instante.",
+        sub: "Personaliza tu equipo y tiempo al instante.",
       },
     }[this.state.step];
 
@@ -508,13 +496,16 @@
       return;
     }
 
-    var singleUnit = this.state.timeUnit === "meses" ? "mes" : "semana";
-    var timeLabel = this.state.timeUnit === "meses" ? "POR MES" : "POR SEMANA";
     var qtyLabel = this.state.quantity > 1 ? "laptops" : "laptop";
     var pBase = this.getBasePrice();
     var tPricePerPeriod = pBase * this.state.quantity;
+    
+    // Configuración nombre e imagen (pasos 3, 4, 5)
+    var combData = this.config.combinations?.[this.state.processorId]?.[this.state.gamaId] || {};
+    var procData = this.config.processors.find((p) => p.id === this.state.processorId);
+    var laptopName = combData.name || (procData ? procData.label : "Laptop Estándar");
 
-    if (this.state.step === 5) {
+    if (this.state.step === 5 || this.state.step === 3) {
       var procOptions = this.config.processors.map(function(p) {
           return '<option value="' + p.id + '" ' + (p.id === self.state.processorId ? 'selected' : '') + '>' + p.label + '</option>';
       }).join('');
@@ -523,102 +514,31 @@
           return '<option value="' + g.id + '" ' + (g.id === self.state.gamaId ? 'selected' : '') + '>' + g.label + '</option>';
       }).join('');
 
-      body.innerHTML = `
-        <div class="ceq-layout-split">
-            <div class="ceq-layout-left">
-                <div class="ceq-box ceq-box-base">
-                    <div class="ceq-box-eyebrow">Configura tu equipo</div>
-                    <div class="ceq-box-base-wrapper">
-                      <div style="margin-bottom: 16px; margin-top: 12px;">
-                          <label style="display:block; font-size:12px; color:#737373; margin-bottom:4px; font-weight:600;">Procesador</label>
-                          <select class="ceq-form-input" data-action="change-proc" style="width:100%; cursor:pointer;">
-                              ${procOptions}
-                          </select>
-                      </div>
-                      <div>
-                          <label style="display:block; font-size:12px; color:#737373; margin-bottom:4px; font-weight:600;">Gama / Tipo de uso</label>
-                          <select class="ceq-form-input" data-action="change-gama" style="width:100%; cursor:pointer;">
-                              ${gamaOptions}
-                          </select>
-                      </div>
-                    </div>
+      // Ajustes para el modo manual (Paso 5) vs Automático (Paso 3)
+      var boxOneContent = this.state.step === 5 
+        ? `<div class="ceq-box-base-wrapper">
+                <div style="margin-bottom: 16px; margin-top: 12px; width: 100%;">
+                    <label style="display:block; font-size:12px; color:#737373; margin-bottom:4px; font-weight:600;">Procesador</label>
+                    <select class="ceq-form-input" data-action="change-proc" style="width:100%; cursor:pointer;">${procOptions}</select>
                 </div>
-                <div class="ceq-box ceq-box-row">
-                    <div class="ceq-opt-icon" style="border-radius:8px;"><svg width="14" height="12" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M12.2578 7.99996V1.99996C12.2578 1.64634 12.1174 1.3072 11.8673 1.05715C11.6173 0.807102 11.2781 0.666626 10.9245 0.666626H2.92449C2.57087 0.666626 2.23173 0.807102 1.98168 1.05715C1.73164 1.3072 1.59116 1.64634 1.59116 1.99996V7.99996M12.2578 7.99996H1.59116M12.2578 7.99996L13.1112 9.69996C13.1626 9.80195 13.1869 9.91544 13.1818 10.0295C13.1768 10.1436 13.1425 10.2545 13.0822 10.3516C13.022 10.4486 12.9379 10.5285 12.8379 10.5837C12.7379 10.6389 12.6254 10.6674 12.5112 10.6666H1.33783C1.22362 10.6674 1.11112 10.6389 1.01112 10.5837C0.911123 10.5285 0.826974 10.4486 0.766744 10.3516C0.706514 10.2545 0.672223 10.1436 0.66716 10.0295C0.662096 9.91544 0.686429 9.80195 0.737827 9.69996L1.59116 7.99996" stroke="#FE5000" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
-</div>
-                    <div class="ceq-opt-main"><div class="ceq-box-title">Cantidad de laptops</div><div class="ceq-box-desc">Unidades a contratar</div></div>
-                    <div>
-                        <div class="ceq-counter-wrap" style="margin:0;">
-                            <button class="ceq-c-btn" style="width:40px;height:40px;font-size:20px;" data-action="qty-minus" data-amount="1">−</button>
-                            <div class="ceq-c-val"><strong style="font-size:24px;margin:0 16px;">${this.state.quantity}</strong></div>
-                            <button class="ceq-c-btn" style="width:40px;height:40px;font-size:20px;" data-action="qty-plus" data-amount="1">+</button>
-                        </div>
-                    </div>
+                <div style="width: 100%;">
+                    <label style="display:block; font-size:12px; color:#737373; margin-bottom:4px; font-weight:600;">Gama / Tipo de uso</label>
+                    <select class="ceq-form-input" data-action="change-gama" style="width:100%; cursor:pointer;">${gamaOptions}</select>
                 </div>
-                <div class="ceq-box">
-                    <div class="ceq-box-wrapper">
-                        <div class="ceq-box-title">Período de alquiler</div>
-                        <div class="ceq-tabs">
-                            <button class="ceq-tab ${this.state.timeUnit === "semanas" ? "active" : ""}" data-action="set-unit" data-value="semanas">Semanas</button>
-                            <button class="ceq-tab ${this.state.timeUnit === "meses" ? "active" : ""}" data-action="set-unit" data-value="meses">Meses</button>
-                        </div>
-                    </div>
-                    <div class="ceq-counter-wrap">
-                        <button class="ceq-c-btn" data-action="time-minus" data-amount="1">−</button>
-                        <div class="ceq-c-val"><strong>${this.state.timeValue}</strong><span>${this.state.timeUnit}</span></div>
-                        <button class="ceq-c-btn" data-action="time-plus" data-amount="1">+</button>
-                    </div>
-                    <div class="ceq-tip-card">
-                        <div class="ceq-tip-icon">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M10 9.33337C10.1333 8.66671 10.4667 8.20004 11 7.66671C11.6667 7.06671 12 6.20004 12 5.33337C12 4.27251 11.5786 3.25509 10.8284 2.50495C10.0783 1.7548 9.06087 1.33337 8 1.33337C6.93913 1.33337 5.92172 1.7548 5.17157 2.50495C4.42143 3.25509 4 4.27251 4 5.33337C4 6.00004 4.13333 6.80004 5 7.66671C5.46667 8.13337 5.86667 8.66671 6 9.33337" stroke="#FE5000" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M6 12H10" stroke="#FE5000" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M6.6665 14.6666H9.33317" stroke="#FE5000" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <div class="ceq-tip-content">
-                            <span class="ceq-tip-text">Un tip: a más meses, tu cuota mensual baja.</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="ceq-layout-right">
-                <div class="ceq-right-card">
-                    <div class="ceq-circle">
-                        <span class="ceq-circle-lbl">CUOTA MENSUAL</span>
-                        <span class="ceq-circle-val">${this.config.currency_symbol}${Math.round(tPricePerPeriod)}</span>
-                        <span class="ceq-circle-sub">${this.config.currency_symbol}${Math.round(pBase)} x ${this.state.quantity} ${qtyLabel}</span>
-                    </div>
-                    <div class="ceq-info-card">
-                        <span class="ceq-info-label">SISTEMA OPERATIVO</span>
-                        <span class="ceq-info-title">Viene con <br> <strong>Windows Pro</strong></span>
-                        <span class="ceq-info-footer">Precios no incluyen IGV.</span>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-      return;
-    }
+           </div>`
+        : `<div class="ceq-box-title">${laptopName}</div><div class="ceq-box-desc">Tu equipo ideal según tus necesidades.</div>`;
 
-    if (this.state.step === 3) {
-      var proc = this.config.processors.find(
-        (p) => p.id === this.state.processorId,
-      );
+      var boxOneEyebrow = this.state.step === 5 ? "Configura tu equipo" : "Tu equipo base incluye";
+
       body.innerHTML = `
         <div class="ceq-layout-split">
             <div class="ceq-layout-left">
                 <div class="ceq-box ceq-box-base">
-                    <div class="ceq-box-eyebrow">Tu equipo base incluye</div>
-                    <div class="ceq-box-title">${proc ? proc.label : ""} + 16 GB RAM + 512 GB SSD</div>
-                    <div class="ceq-box-desc">Puedes añadir extras más adelante si deseas.</div>
+                    <div class="ceq-box-eyebrow">${boxOneEyebrow}</div>
+                    ${boxOneContent}
                 </div>
                 <div class="ceq-box ceq-box-row">
-                    <div class="ceq-opt-icon" style="border-radius:8px;"><svg width="14" height="12" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M12.2578 7.99996V1.99996C12.2578 1.64634 12.1174 1.3072 11.8673 1.05715C11.6173 0.807102 11.2781 0.666626 10.9245 0.666626H2.92449C2.57087 0.666626 2.23173 0.807102 1.98168 1.05715C1.73164 1.3072 1.59116 1.64634 1.59116 1.99996V7.99996M12.2578 7.99996H1.59116M12.2578 7.99996L13.1112 9.69996C13.1626 9.80195 13.1869 9.91544 13.1818 10.0295C13.1768 10.1436 13.1425 10.2545 13.0822 10.3516C13.022 10.4486 12.9379 10.5285 12.8379 10.5837C12.7379 10.6389 12.6254 10.6674 12.5112 10.6666H1.33783C1.22362 10.6674 1.11112 10.6389 1.01112 10.5837C0.911123 10.5285 0.826974 10.4486 0.766744 10.3516C0.706514 10.2545 0.672223 10.1436 0.66716 10.0295C0.662096 9.91544 0.686429 9.80195 0.737827 9.69996L1.59116 7.99996" stroke="#FE5000" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
-</div>
+                    <div class="ceq-opt-icon" style="border-radius:8px;"><svg width="14" height="12" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.2578 7.99996V1.99996C12.2578 1.64634 12.1174 1.3072 11.8673 1.05715C11.6173 0.807102 11.2781 0.666626 10.9245 0.666626H2.92449C2.57087 0.666626 2.23173 0.807102 1.98168 1.05715C1.73164 1.3072 1.59116 1.64634 1.59116 1.99996V7.99996M12.2578 7.99996H1.59116M12.2578 7.99996L13.1112 9.69996C13.1626 9.80195 13.1869 9.91544 13.1818 10.0295C13.1768 10.1436 13.1425 10.2545 13.0822 10.3516C13.022 10.4486 12.9379 10.5285 12.8379 10.5837C12.7379 10.6389 12.6254 10.6674 12.5112 10.6666H1.33783C1.22362 10.6674 1.11112 10.6389 1.01112 10.5837C0.911123 10.5285 0.826974 10.4486 0.766744 10.3516C0.706514 10.2545 0.672223 10.1436 0.66716 10.0295C0.662096 9.91544 0.686429 9.80195 0.737827 9.69996L1.59116 7.99996" stroke="#FE5000" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
                     <div class="ceq-opt-main"><div class="ceq-box-title">Cantidad de laptops</div><div class="ceq-box-desc">Unidades a contratar</div></div>
                     <div>
                         <div class="ceq-counter-wrap" style="margin:0;">
@@ -643,11 +563,7 @@
                     </div>
                     <div class="ceq-tip-card">
                         <div class="ceq-tip-icon">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M10 9.33337C10.1333 8.66671 10.4667 8.20004 11 7.66671C11.6667 7.06671 12 6.20004 12 5.33337C12 4.27251 11.5786 3.25509 10.8284 2.50495C10.0783 1.7548 9.06087 1.33337 8 1.33337C6.93913 1.33337 5.92172 1.7548 5.17157 2.50495C4.42143 3.25509 4 4.27251 4 5.33337C4 6.00004 4.13333 6.80004 5 7.66671C5.46667 8.13337 5.86667 8.66671 6 9.33337" stroke="#FE5000" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M6 12H10" stroke="#FE5000" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M6.6665 14.6666H9.33317" stroke="#FE5000" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 9.33337C10.1333 8.66671 10.4667 8.20004 11 7.66671C11.6667 7.06671 12 6.20004 12 5.33337C12 4.27251 11.5786 3.25509 10.8284 2.50495C10.0783 1.7548 9.06087 1.33337 8 1.33337C6.93913 1.33337 5.92172 1.7548 5.17157 2.50495C4.42143 3.25509 4 4.27251 4 5.33337C4 6.00004 4.13333 6.80004 5 7.66671C5.46667 8.13337 5.86667 8.66671 6 9.33337" stroke="#FE5000" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 12H10" stroke="#FE5000" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.6665 14.6666H9.33317" stroke="#FE5000" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </div>
                         <div class="ceq-tip-content">
                             <span class="ceq-tip-text">Un tip: a más meses, tu cuota mensual baja.</span>
@@ -674,20 +590,22 @@
     }
 
     if (this.state.step === 4) {
-      var proc = this.config.processors.find(
-        (p) => p.id === this.state.processorId,
-      );
+      var laptopImageHtml = combData.image 
+        ? `<img src="${combData.image}" alt="${laptopName}" style="max-width: 140%; max-height: 140%; object-fit: contain; margin-right: -40px;">` 
+        : '';
+
       body.innerHTML = `
         <div class="ceq-step4-container">
             <div class="ceq-step4-top">
                 <div class="ceq-step4-price-circle">
-                    <div class="ceq-s4-lbl">Costo mensual<br>por laptop*</div>
-                    <div class="ceq-s4-specs">${proc ? proc.label : "Core i5"} | 16GB RAM | 500 GB SSD</div>
+                    <div class="ceq-s4-lbl">COSTO MENSUAL<br>POR LAPTOP*</div>
+                    <div class="ceq-s4-specs" style="color: #ea580c; font-size: 22px; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">${laptopName}</div>
                     <div class="ceq-s4-price"><span>${this.config.currency_symbol}</span> ${Math.round(pBase)}</div>
                     <div class="ceq-s4-disc">*El precio no incluye IGV.</div>
                 </div>
                 <div class="ceq-step4-images">
-                    </div>
+                    ${laptopImageHtml}
+                </div>
             </div>
             <div class="ceq-step4-features">
                 <div class="ceq-feat-item">
@@ -888,29 +806,11 @@
     return match;
   };
 
-  CotizadorUI.prototype.getExtrasPrice = function () {
-    var total = 0,
-      self = this;
-    var extRam = self.config.extras.find(
-      (e) => e.id === self.state.selectedExtras.ram,
-    );
-    var extStorage = self.config.extras.find(
-      (e) => e.id === self.state.selectedExtras.almacenamiento,
-    );
-    if (extRam) total += parseFloat(extRam.price) || 0;
-    if (extStorage) total += parseFloat(extStorage.price) || 0;
-    return total;
-  };
-
   CotizadorUI.prototype.getBasePrice = function () {
     var rule = this.getMatchedRule();
     if (!rule || !this.state.processorId || !this.state.gamaId) return 0;
-    var raw =
-      this.config.prices[this.state.processorId]?.[this.state.gamaId]?.[
-        rule.id
-      ];
-    var base = raw ? parseFloat(raw) : 0;
-    return base + this.getExtrasPrice();
+    var raw = this.config.prices[this.state.processorId]?.[this.state.gamaId]?.[rule.id];
+    return raw ? parseFloat(raw) : 0;
   };
 
   CotizadorUI.prototype.canContinue = function () {
@@ -929,12 +829,10 @@
       processors: r.processors || [],
       gamas: r.gamas || [],
       periods: r.periods || [],
-      extras: r.extras || [],
+      combinations: r.combinations || {},
       prices: r.prices || {},
     };
   };
-
-// --- NUEVOS MÉTODOS DE VALIDACIÓN Y ENVÍO ---
 
   CotizadorUI.prototype.validateLocalFields = function (formEl) {
     var isValid = true;
@@ -944,14 +842,12 @@
     var telefono = formEl.querySelector('[name="telefono"]');
     var terminos = formEl.querySelector('[name="terminos"]');
 
-    // Limpiar errores primero
     this.clearError(ruc);
     this.clearError(nombre);
     this.clearError(correo);
     this.clearError(telefono);
     this.clearError(terminos);
 
-    // Validar RUC
     var rucVal = ruc.value.trim();
     if (!rucVal) {
         this.showError(ruc, "El RUC es requerido.");
@@ -961,13 +857,11 @@
         isValid = false;
     }
 
-    // Validar Nombre
     if(!nombre.value.trim()){
         this.showError(nombre, "El nombre completo es requerido.");
         isValid = false;
     }
 
-    // Validar Correo Corporativo
     var emailVal = correo.value.trim();
     var emailDomain = emailVal.split("@")[1] || "";
     var invalidDomains = ["gmail.com", "hotmail.com", "outlook.com", "gmail.pe", "hotmail.pe", "outlook.pe", "yahoo.com"];
@@ -980,7 +874,6 @@
         isValid = false;
     }
 
-    // Validar Teléfono
     var telVal = telefono.value.trim();
     if(!telVal){
         this.showError(telefono, "El número de WhatsApp es requerido.");
@@ -989,12 +882,10 @@
         this.showError(telefono, "El número debe empezar con 9 y tener 9 dígitos.");
         isValid = false;
     } else if (/(\d)\1{6}/.test(telVal)) {
-        // Rechaza si tiene 7 o más dígitos repetidos consecutivos
         this.showError(telefono, "Por favor, ingresa un número de teléfono válido.");
         isValid = false;
     }
 
-    // Validar Checkbox Términos
     if(!terminos.checked){
         this.showError(terminos, "Debes aceptar la política de protección de datos.");
         isValid = false;

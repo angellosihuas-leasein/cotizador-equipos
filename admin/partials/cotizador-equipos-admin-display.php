@@ -13,7 +13,7 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 		<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 mt-4 gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
 			<div>
 				<h1 class="text-2xl font-semibold text-slate-900 m-0">Reglas y Precios del Cotizador</h1>
-				<p class="text-sm text-slate-500 mt-1 m-0">Configura los pasos, opciones, extras y reglas de cálculo de tu cotizador.</p>
+				<p class="text-sm text-slate-500 mt-1 m-0">Configura los pasos, opciones y reglas de cálculo de tu cotizador.</p>
 			</div>
 			<div class="flex flex-col sm:flex-row items-stretch gap-4">
 				<div class="flex items-center gap-2 bg-slate-50 px-4 rounded-lg border border-slate-200 h-[44px]">
@@ -76,7 +76,7 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 									<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
 										<div>
 											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Nombre interno</label>
-											<input type="text" x-model="proc.label" class="w-full font-medium border border-slate-200 rounded p-2 text-sm outline-none focus:border-orange-500" placeholder="Ej: Core i5">
+											<input type="text" x-model="proc.label" @input="normalizeMatrix()" class="w-full font-medium border border-slate-200 rounded p-2 text-sm outline-none focus:border-orange-500" placeholder="Ej: Core i5">
 										</div>
 										<div>
 											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Título público</label>
@@ -92,14 +92,14 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 					</div>
 
 					<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-						<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-5 text-slate-800 m-0">Opciones: Paso 2 (Jornada)</h2>
+						<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-5 text-slate-800 m-0">Opciones: Paso 2 (Gama)</h2>
 						<div class="space-y-3">
 							<template x-for="(gama, index) in formData.gamas" :key="gama.id">
 								<div class="p-4 border border-slate-200 rounded-lg bg-slate-50">
 									<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
 										<div>
 											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Nombre interno</label>
-											<input type="text" x-model="gama.label" class="w-full font-medium border border-slate-200 rounded p-2 text-sm outline-none focus:border-orange-500" placeholder="Ej: Gama base">
+											<input type="text" x-model="gama.label" @input="normalizeMatrix()" class="w-full font-medium border border-slate-200 rounded p-2 text-sm outline-none focus:border-orange-500" placeholder="Ej: Gama base">
 										</div>
 										<div>
 											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Título público</label>
@@ -113,37 +113,43 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 						</div>
 						<button type="button" @click="addItem('gamas')" class="mt-4 text-sm font-medium text-orange-600 bg-white border border-orange-200 py-2 px-4 rounded-lg cursor-pointer hover:bg-orange-50">+ Añadir Opción</button>
 					</div>
+				</div>
 
-					<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 xl:col-span-2">
-						<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-5 text-slate-800 m-0">Extras / Adicionales (Modo Manual)</h2>
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-							<template x-for="(extra, index) in formData.extras" :key="extra.id">
-								<div class="p-4 border border-slate-200 rounded-lg bg-slate-50 relative">
-									<div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
-										<div>
-											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Tipo</label>
-											<select x-model="extra.type" class="w-full border border-slate-300 rounded p-2 text-sm outline-none focus:border-orange-500 bg-white">
-												<option value="ram">Memoria RAM</option>
-												<option value="almacenamiento">Almacenamiento</option>
-											</select>
-										</div>
-										<div>
-											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Nombre</label>
-											<input type="text" x-model="extra.label" class="w-full font-medium border border-slate-200 rounded p-2 text-sm outline-none focus:border-orange-500" placeholder="Ej: 8GB RAM Extra">
-										</div>
-										<div>
-											<label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Precio Adicional</label>
-											<div class="relative flex items-center">
-												<span class="absolute left-3 text-slate-400 text-sm font-medium" x-text="simboloDivisa"></span>
-												<input type="number" step="0.01" x-model="extra.price" class="w-full border border-slate-300 rounded p-2 pl-9 text-sm outline-none focus:border-orange-500 font-bold" placeholder="0.00">
-											</div>
-										</div>
-									</div>
-									<div class="flex justify-end mt-2"><button type="button" @click="removeItem('extras', index)" class="text-xs text-red-500 font-semibold cursor-pointer border-none bg-transparent hover:underline">Eliminar</button></div>
-								</div>
-							</template>
-						</div>
-						<button type="button" @click="addItem('extras')" class="mt-4 text-sm font-medium text-orange-600 bg-white border border-orange-200 py-2 px-4 rounded-lg cursor-pointer hover:bg-orange-50">+ Añadir Extra</button>
+				<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+					<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-4 text-slate-800 m-0">Equipos e Imágenes (Por Procesador y Gama)</h2>
+					<div class="overflow-x-auto border border-slate-200 rounded-lg">
+						<table class="w-full text-sm text-left border-collapse bg-white">
+							<thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
+								<tr>
+									<th class="py-3 px-4 font-semibold w-1/5">Procesador</th>
+									<th class="py-3 px-4 font-semibold w-1/5">Gama</th>
+									<th class="py-3 px-4 font-semibold w-1/4">Nombre del Equipo</th>
+									<th class="py-3 px-4 font-semibold">Imagen del Equipo</th>
+								</tr>
+							</thead>
+							<tbody class="divide-y divide-slate-100">
+								<template x-for="proc in formData.processors" :key="'img-proc-' + proc.id">
+									<template x-for="gama in formData.gamas" :key="'img-row-' + proc.id + '-' + gama.id">
+										<tr class="hover:bg-orange-50/20">
+											<td class="py-3 px-4 font-medium text-slate-700" x-text="proc.label"></td>
+											<td class="py-3 px-4 font-medium text-slate-700" x-text="gama.label"></td>
+											<td class="py-3 px-4">
+												<input type="text" x-model="formData.combinations[proc.id][gama.id].name" class="w-full border border-slate-300 rounded p-2 text-sm outline-none focus:border-orange-500" placeholder="Ej: HP EliteBook">
+											</td>
+											<td class="py-3 px-4">
+												<div class="flex flex-col sm:flex-row items-center gap-2">
+													<input type="text" x-model="formData.combinations[proc.id][gama.id].image" class="w-full border border-slate-300 rounded p-2 text-sm outline-none focus:border-orange-500" placeholder="URL de la imagen">
+													<button type="button" @click="openMediaUploader(proc.id, gama.id)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-xs font-medium cursor-pointer flex-shrink-0">Subir / Elegir</button>
+												</div>
+												<template x-if="formData.combinations[proc.id][gama.id].image">
+													<img :src="formData.combinations[proc.id][gama.id].image" class="mt-2 h-14 object-contain border border-slate-200 rounded p-1 bg-white" alt="Preview">
+												</template>
+											</td>
+										</tr>
+									</template>
+								</template>
+							</tbody>
+						</table>
 					</div>
 				</div>
 
@@ -176,7 +182,7 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 											<input type="number" min="1" x-model="periodo.max_value" class="w-20 border border-slate-300 rounded p-1.5 outline-none focus:border-orange-500 text-center" placeholder="∞">
 										</td>
 										<td class="py-3 px-4">
-											<input type="text" x-model="periodo.label" class="w-full border border-slate-300 rounded p-1.5 outline-none focus:border-orange-500" placeholder="Ej: 1 a 3 meses">
+											<input type="text" x-model="periodo.label" @input="normalizeMatrix()" class="w-full border border-slate-300 rounded p-1.5 outline-none focus:border-orange-500" placeholder="Ej: 1 a 3 meses">
 										</td>
 										<td class="py-3 px-4 text-center">
 											<button type="button" @click="removeItem('periods', index)" class="text-red-500 hover:text-red-700 bg-transparent border-none cursor-pointer p-1">
@@ -198,7 +204,7 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 							<thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
 								<tr>
 									<th class="py-3 px-4 font-semibold" style="width:12%;">Procesador</th>
-									<th class="py-3 px-4 font-semibold" style="width:12%;">Jornada</th>
+									<th class="py-3 px-4 font-semibold" style="width:12%;">Gama</th>
 									<template x-for="periodo in formData.periods" :key="'head-' + periodo.id">
 										<th class="py-3 px-4 font-semibold text-center min-w-[140px]">
 											<div class="text-orange-600" x-text="periodo.label || 'Regla'"></div>
@@ -208,8 +214,8 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 								</tr>
 							</thead>
 							<tbody class="divide-y divide-slate-100">
-								<template x-for="proc in formData.processors" :key="'proc-' + proc.id">
-									<template x-for="gama in formData.gamas" :key="'row-' + proc.id + '-' + gama.id">
+								<template x-for="proc in formData.processors" :key="'price-proc-' + proc.id">
+									<template x-for="gama in formData.gamas" :key="'price-row-' + proc.id + '-' + gama.id">
 										<tr class="hover:bg-orange-50/20">
 											<td class="py-3 px-4 font-medium text-slate-700" x-text="proc.label"></td>
 											<td class="py-3 px-4 font-medium text-slate-700" x-text="gama.label"></td>
@@ -239,7 +245,7 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 			tab: 'configuracion',
 			initialSettings: <?php echo $settings_json; ?>,
 			simboloDivisa: 'S/.',
-			formData: { currency_code: 'PEN', currency_symbol: 'S/.', texts: {}, processors: [], gamas: [], periods: [], extras: [], prices: {} },
+			formData: { currency_code: 'PEN', currency_symbol: 'S/.', texts: {}, processors: [], gamas: [], periods: [], combinations: {}, prices: {} },
 
 			init() {
 				const incoming = this.initialSettings && typeof this.initialSettings === 'object' ? this.initialSettings : {};
@@ -248,10 +254,11 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 				this.formData.processors = this.normalizeItems(incoming.processors, 'proc');
 				this.formData.gamas = this.normalizeItems(incoming.gamas, 'gama');
 				this.formData.periods = this.normalizePeriods(incoming.periods);
-				this.formData.extras = this.normalizeExtras(incoming.extras);
+				
+				this.formData.combinations = incoming.combinations || {};
 				this.formData.prices = incoming.prices || {};
 				this.actualizarSimbolo();
-				this.normalizePrices();
+				this.normalizeMatrix();
 			},
 
 			normalizeItems(rawItems, prefix) {
@@ -275,16 +282,6 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 				}));
 			},
 
-			normalizeExtras(rawItems) {
-				const source = Array.isArray(rawItems) ? rawItems : [];
-				return source.map((item, idx) => ({
-					id: item.id || 'extra_' + (idx + 1),
-					type: ['ram', 'almacenamiento'].includes(item.type) ? item.type : 'ram',
-					label: item.label || '',
-					price: item.price || '0.00'
-				}));
-			},
-
 			actualizarSimbolo() {
 				const map = { PEN: 'S/.', USD: '$', COP: '$' };
 				this.simboloDivisa = map[this.formData.currency_code] || 'S/.';
@@ -296,17 +293,15 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 				let id = type + '_' + Date.now();
 				if (type === 'periods') {
 					list.push({ id: id, label: '', unit: 'meses', min_value: 1, max_value: '' });
-				} else if (type === 'extras') {
-					list.push({ id: id, type: 'ram', label: '', price: '0.00' });
 				} else {
 					list.push({ id: id, label: '', front_label: '', description: '' });
 				}
-				this.normalizePrices();
+				this.normalizeMatrix();
 			},
 
 			removeItem(type, index) {
 				this.formData[type].splice(index, 1);
-				this.normalizePrices();
+				this.normalizeMatrix();
 			},
 
 			getPrice(p, g, per) {
@@ -319,22 +314,48 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 				this.formData.prices[p][g][per] = value.replace(/[^0-9.]/g, '');
 			},
 
-			normalizePrices() {
-				const normalized = {};
+			normalizeMatrix() {
+				const normalizedPrices = {};
+				const normalizedCombinations = {};
+
 				this.formData.processors.forEach(proc => {
-					normalized[proc.id] = {};
+					normalizedPrices[proc.id] = {};
+					normalizedCombinations[proc.id] = {};
+
 					this.formData.gamas.forEach(gama => {
-						normalized[proc.id][gama.id] = {};
+						// Setup Prices
+						normalizedPrices[proc.id][gama.id] = {};
 						this.formData.periods.forEach(per => {
-							normalized[proc.id][gama.id][per.id] = this.getPrice(proc.id, gama.id, per.id);
+							normalizedPrices[proc.id][gama.id][per.id] = this.getPrice(proc.id, gama.id, per.id);
 						});
+
+						// Setup Combinations
+						normalizedCombinations[proc.id][gama.id] = {
+							name: this.formData.combinations[proc.id]?.[gama.id]?.name || '',
+							image: this.formData.combinations[proc.id]?.[gama.id]?.image || ''
+						};
 					});
 				});
-				this.formData.prices = normalized;
+
+				this.formData.prices = normalizedPrices;
+				this.formData.combinations = normalizedCombinations;
+			},
+
+			openMediaUploader(procId, gamaId) {
+				let customUploader = wp.media({
+					title: 'Seleccionar Imagen de Equipo',
+					button: { text: 'Usar esta imagen' },
+					multiple: false
+				});
+				customUploader.on('select', () => {
+					let attachment = customUploader.state().get('selection').first().toJSON();
+					this.formData.combinations[procId][gamaId].image = attachment.url;
+				});
+				customUploader.open();
 			},
 
 			beforeSubmit() {
-				this.normalizePrices();
+				this.normalizeMatrix();
 				this.$refs.settingsJson.value = JSON.stringify(this.formData);
 			}
 		}));

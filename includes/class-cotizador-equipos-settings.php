@@ -65,10 +65,7 @@ class Cotizador_Equipos_Settings {
 				array( 'id' => 'semanas_2_4', 'label' => '2 a 4 semanas', 'front_label' => '2 a 4 semanas', 'description' => 'Plan temporal extendido por semanas.', 'unit' => 'semanas', 'min_value' => 2, 'max_value' => 4 ),
 				array( 'id' => 'meses_1_12', 'label' => '1 a 12 meses', 'front_label' => '1 a 12 meses', 'description' => 'Plan mensual para contratos estables.', 'unit' => 'meses', 'min_value' => 1, 'max_value' => 12 ),
 			),
-			'extras'          => array(
-				array( 'id' => 'ram_8', 'type' => 'ram', 'label' => '8GB RAM Extra', 'price' => '20.00' ),
-				array( 'id' => 'hdd_1tb', 'type' => 'almacenamiento', 'label' => '1TB HDD Extra', 'price' => '30.00' ),
-			),
+			'combinations'    => array(),
 			'prices'          => array(),
 		);
 	}
@@ -93,7 +90,10 @@ class Cotizador_Equipos_Settings {
 		$settings['processors'] = self::sanitize_options_list( isset( $raw['processors'] ) ? $raw['processors'] : array(), 'proc', $defaults['processors'] );
 		$settings['gamas'] = self::sanitize_options_list( isset( $raw['gamas'] ) ? $raw['gamas'] : array(), 'gama', $defaults['gamas'] );
 		$settings['periods'] = self::sanitize_periods( isset( $raw['periods'] ) ? $raw['periods'] : array(), 'periodo', $defaults['periods'] );
-		$settings['extras'] = self::sanitize_extras( isset( $raw['extras'] ) ? $raw['extras'] : array(), 'extra', $defaults['extras'] );
+		
+		// Combinaciones de Nombres e Imágenes
+		$comb_raw = isset( $raw['combinations'] ) && is_array( $raw['combinations'] ) ? $raw['combinations'] : array();
+		$settings['combinations'] = self::sanitize_combinations( $comb_raw, $settings['processors'], $settings['gamas'] );
 
 		// Precios
 		$prices_raw = isset( $raw['prices'] ) && is_array( $raw['prices'] ) ? $raw['prices'] : array();
@@ -186,32 +186,23 @@ class Cotizador_Equipos_Settings {
 		return empty( $cleaned ) ? $fallback_items : $cleaned;
 	}
 
-	private static function sanitize_extras( $items_raw, $prefix, $fallback_items ) {
-		$items_raw = is_array( $items_raw ) ? $items_raw : array();
-		$cleaned   = array();
-		$used_ids  = array();
-		$allowed_types = array( 'ram', 'almacenamiento' );
-
-		foreach ( $items_raw as $index => $item ) {
-			if ( ! is_array( $item ) ) continue;
-			$label = isset( $item['label'] ) ? sanitize_text_field( wp_unslash( $item['label'] ) ) : '';
-			if ( '' === $label ) continue;
-
-			$id    = isset( $item['id'] ) ? sanitize_key( wp_unslash( $item['id'] ) ) : '';
-			$type  = isset( $item['type'] ) && in_array( $item['type'], $allowed_types ) ? $item['type'] : 'ram';
-			$price = isset( $item['price'] ) ? sanitize_text_field( wp_unslash( $item['price'] ) ) : '0';
-			$numeric_price = is_numeric($price) ? max( 0, (float) $price ) : 0;
-
-			if ( '' === $id ) $id = sanitize_title( $label );
-			if ( '' === $id ) $id = $prefix . '_' . ( absint( $index ) + 1 );
-
-			$base_id = $id; $suffix = 2;
-			while ( isset( $used_ids[ $id ] ) ) { $id = $base_id . '_' . $suffix; ++$suffix; }
-			$used_ids[ $id ] = true;
-
-			$cleaned[] = array( 'id' => $id, 'type' => $type, 'label' => $label, 'price' => number_format( $numeric_price, 2, '.', '' ) );
+	private static function sanitize_combinations( $comb_raw, $processors, $gamas ) {
+		$combinations = array();
+		foreach ( $processors as $processor ) {
+			$p_id = $processor['id'];
+			$combinations[ $p_id ] = array();
+			foreach ( $gamas as $gama ) {
+				$g_id = $gama['id'];
+				$name = '';
+				$image = '';
+				if ( isset( $comb_raw[ $p_id ][ $g_id ] ) ) {
+					$name = sanitize_text_field( wp_unslash( $comb_raw[ $p_id ][ $g_id ]['name'] ?? '' ) );
+					$image = sanitize_url( wp_unslash( $comb_raw[ $p_id ][ $g_id ]['image'] ?? '' ) );
+				}
+				$combinations[ $p_id ][ $g_id ] = array( 'name' => $name, 'image' => $image );
+			}
 		}
-		return empty( $cleaned ) ? $fallback_items : $cleaned;
+		return $combinations;
 	}
 
 	private static function sanitize_prices( $prices_raw, $processors, $gamas, $periods ) {

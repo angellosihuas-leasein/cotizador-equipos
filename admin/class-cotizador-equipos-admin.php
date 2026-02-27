@@ -31,6 +31,8 @@ class Cotizador_Equipos_Admin {
 			return;
 		}
 
+		wp_enqueue_media(); // <--- NUEVO: Para usar la librería de medios de WordPress
+
 		wp_enqueue_style(
 			$this->plugin_name . '-admin-fonts',
 			'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap',
