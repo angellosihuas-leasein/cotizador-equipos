@@ -15,81 +15,6 @@
   function initCotizadores() {
     loadLottieScript();
     
-    // Inyectar CSS necesario para las nuevas animaciones y alertas
-    var style = document.createElement('style');
-    style.innerHTML = `
-        @keyframes subtle-shake {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-3px); }
-            40% { transform: translateX(3px); }
-            60% { transform: translateX(-3px); }
-            80% { transform: translateX(3px); }
-        }
-        .animate-error-shake {
-            animation: subtle-shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-        }
-        .error-container {
-            display: grid;
-            grid-template-rows: 0fr;
-            transition: all 0.3s ease-in-out;
-            opacity: 0;
-            margin-top: 0;
-        }
-        .error-container.show-error {
-            grid-template-rows: 1fr;
-            opacity: 1;
-            margin-top: 6px;
-        }
-        .error-inner {
-            overflow: hidden;
-        }
-        .ceq-error-pill {
-            display: inline-flex;
-            align-items: flex-start;
-            gap: 8px;
-            background-color: rgba(254, 242, 242, 0.9);
-            border: 1px solid #fee2e2;
-            padding: 8px 12px;
-            border-radius: 8px;
-            backdrop-filter: blur(4px);
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            width: max-content;
-        }
-        .ceq-error-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: #ef4444;
-            flex-shrink: 0;
-            margin-top: 6px;
-        }
-        .ceq-error-text {
-            font-size: 12px;
-            font-weight: 500;
-            color: #dc2626;
-            line-height: 1.3;
-        }
-        .ceq-input-error {
-            background-color: #ffffff !important;
-            border-color: #fca5a5 !important;
-            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.05) !important;
-        }
-        /* Fix Loader */
-        .loader {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top: 3px solid #fff;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: none;
-            margin: 0 auto;
-        }
-        .loading-btn .loader { display: block; }
-        .loading-btn .btn-text { display: none; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    `;
-    document.head.appendChild(style);
 
     var containers = document.querySelectorAll(".ce-cotizador[data-ce-config]");
     containers.forEach(function (container) {
@@ -248,6 +173,9 @@
         self.state.gamaId = e.target.value;
         self.renderBody();
         self.renderFooter();
+      }
+      if (e.target.name === "terminos") {
+          self.clearError(e.target);
       }
     });
 
@@ -793,16 +721,14 @@
     }
 
     var t = this.config.texts || {};
-    // Aquí puedes poner el número de WhatsApp oficial de Leasein
     var waUrl = t.whatsapp_url || "https://wa.me/51987146591"; 
 
     var back =
       '<button class="ceq-btn-ghost" data-action="back"><svg style="width:20px;height:20px;margin-right:8px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg> Volver</button>';
 
-    // --- NUEVO ENLACE A WHATSAPP ---
     var whatsappLinkHtml = `
         <div class="ceq-s4-manual-link" style="text-align: center; margin-top: 24px; font-size: 14px; color: #737373;">
-            ¿Tienes dudas? <a href="${waUrl}" target="_blank" style="text-decoration: none; font-weight: 600;">Conversa con un especialista <img src="${typeof cotizadorData !== 'undefined' ? cotizadorData.pluginUrl : ''}img/whatsapp.svg" alt="WhatsApp Icon"></a>
+            ¿Tienes dudas? <a href="${waUrl}" target="_blank" style="display: inline-flex; align-items: center; gap: 10px;text-decoration: none; font-weight: 600;">Conversa con un especialista <img src="${typeof cotizadorData !== 'undefined' ? cotizadorData.pluginUrl : ''}img/whatsapp.svg" alt="WhatsApp Icon"></a>
         </div>`;
 
     if (this.state.step === 4) {
@@ -828,7 +754,7 @@
 
     footer.innerHTML = `
         <div style="width: 100%;">
-            <div style="display: flex; justify-content: space-between; width: 100%;">
+            <div class="wrapper-stps-btns">
                 ${back}
                 ${nextBtn}
             </div>
@@ -851,7 +777,7 @@
                     <svg style="width:20px;height:20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
                 
-                <form id="ceq-quote-form" class="form-wrapper">
+                <form id="ceq-quote-form" class="form-wrapper" novalidate>
                     <h3 class="ceq-modal-title">Recibe tu cotización</h3>
                     <p class="ceq-modal-desc">Te enviaremos un PDF formal con todos los detalles.</p>
                     
@@ -907,6 +833,22 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="ceq-checkbox-group">
+                        <input type="checkbox" id="terminos-cotizador" name="terminos" class="ceq-checkbox-input" required>
+                        <label for="terminos-cotizador" class="ceq-checkbox-label">
+                            Acepto la <a href="https://leasein.pe/politicas-de-privacidad/" target="_blank">Política de Protección de Datos</a> y autorizo el uso para fines comerciales
+                        </label>
+                    </div>
+                    <div id="error-terminos" class="error-container" style="margin-top:-15px; margin-bottom:15px;">
+                        <div class="error-inner">
+                            <div class="ceq-error-pill">
+                                <div class="ceq-error-dot"></div>
+                                <span class="message-text ceq-error-text"></span>
+                            </div>
+                        </div>
+                    </div>
+
                     <button type="submit" class="ceq-btn-primary ceq-btn-block">
                         <span class="btn-text">Enviar cotización</span>
                         <div class="loader"></div>
@@ -1000,12 +942,14 @@
     var nombre = formEl.querySelector('[name="nombre"]');
     var correo = formEl.querySelector('[name="correo"]');
     var telefono = formEl.querySelector('[name="telefono"]');
+    var terminos = formEl.querySelector('[name="terminos"]');
 
     // Limpiar errores primero
     this.clearError(ruc);
     this.clearError(nombre);
     this.clearError(correo);
     this.clearError(telefono);
+    this.clearError(terminos);
 
     // Validar RUC
     var rucVal = ruc.value.trim();
@@ -1044,6 +988,16 @@
     } else if (!/^9\d{8}$/.test(telVal)) {
         this.showError(telefono, "El número debe empezar con 9 y tener 9 dígitos.");
         isValid = false;
+    } else if (/(\d)\1{6}/.test(telVal)) {
+        // Rechaza si tiene 7 o más dígitos repetidos consecutivos
+        this.showError(telefono, "Por favor, ingresa un número de teléfono válido.");
+        isValid = false;
+    }
+
+    // Validar Checkbox Términos
+    if(!terminos.checked){
+        this.showError(terminos, "Debes aceptar la política de protección de datos.");
+        isValid = false;
     }
 
     return isValid;
@@ -1056,11 +1010,15 @@
           var errorText = errorContainer.querySelector('.message-text');
           errorText.textContent = message;
           
-          inputEl.classList.add('ceq-input-error', 'animate-error-shake');
+          if(inputEl.type !== 'checkbox') {
+              inputEl.classList.add('ceq-input-error', 'animate-error-shake');
+          }
           errorContainer.classList.add('show-error');
           
           setTimeout(() => {
-              inputEl.classList.remove('animate-error-shake');
+              if(inputEl.type !== 'checkbox') {
+                  inputEl.classList.remove('animate-error-shake');
+              }
           }, 400);
       }
   };
@@ -1069,7 +1027,9 @@
       if(!inputEl) return;
       var errorContainer = document.getElementById('error-' + inputEl.name);
       if (errorContainer) {
-          inputEl.classList.remove('ceq-input-error');
+          if(inputEl.type !== 'checkbox') {
+              inputEl.classList.remove('ceq-input-error');
+          }
           errorContainer.classList.remove('show-error');
       }
   };
