@@ -41,6 +41,8 @@
       timeValue: 1,
       quantity: 1,
       isModalOpen: false,
+      addonRamId: "", 
+      addonStorageId: ""
     };
   }
 
@@ -83,6 +85,11 @@
         if (!self.state.gamaId && self.config.gamas.length)
           self.state.gamaId = self.config.gamas[0].id;
         self.goToStep(5);
+      }
+
+      if (action === "scroll-down") {
+        var scrollContainer = self.root.querySelector('.ceq-layout-left');
+        if (scrollContainer) scrollContainer.scrollBy({ top: 180, behavior: 'smooth' });
       }
 
       if (action === "next" && self.canContinue()) {
@@ -165,6 +172,14 @@
         self.state.processorId = e.target.value;
         self.renderBody();
         self.renderFooter();
+      }
+      if (action === "change-addon-ram") {
+        self.state.addonRamId = e.target.value;
+        self.renderBody(); self.renderFooter();
+      }
+      if (action === "change-addon-storage") {
+        self.state.addonStorageId = e.target.value;
+        self.renderBody(); self.renderFooter();
       }
       if (action === "change-gama") {
         self.state.gamaId = e.target.value;
@@ -328,7 +343,7 @@
   };
 
   CotizadorUI.prototype.renderHeader = function () {
-    if (this.state.step === 0 || this.state.step === 4) {
+    if (this.state.step === 0) {
       this.root.querySelector(".ceq-header").innerHTML = "";
       return;
     }
@@ -345,10 +360,12 @@
         sub: "El chasis determina la durabilidad, ventilación y portabilidad del equipo.",
       },
       3: { eye: "PASO 3 DE 4", title: "Configura tu plan de alquiler" },
+      4: {
+        eye: "PASO 4 DE 4",
+        title: "¡Listo! Mira el resumen de tu alquiler"
+      },
       5: {
-        eye: "MODO MANUAL",
-        title: t.manual_title || "Configuración Rápida",
-        sub: "Personaliza tu equipo y tiempo al instante.",
+        title: t.manual_title || "Configura tu plan de alquiler",
       },
     }[this.state.step];
 
@@ -517,19 +534,40 @@
           return '<option value="' + g.id + '" ' + (g.id === self.state.gamaId ? 'selected' : '') + '>' + g.label + '</option>';
       }).join('');
 
+      var ramOptions = '<option value="">Base (16GB RAM)</option>' + (this.config.addons?.ram || []).map(function(r) {
+          return '<option value="' + r.id + '" ' + (r.id === self.state.addonRamId ? 'selected' : '') + '>' + r.label + ' (+'+self.config.currency_symbol+r.price+')</option>';
+      }).join('');
+      var stoOptions = '<option value="">Base (512GB SSD)</option>' + (this.config.addons?.storage || []).map(function(s) {
+          return '<option value="' + s.id + '" ' + (s.id === self.state.addonStorageId ? 'selected' : '') + '>' + s.label + ' (+'+self.config.currency_symbol+s.price+')</option>';
+      }).join('');
+
+
       // Ajustes para el modo manual (Paso 5) vs Automático (Paso 3)
       var boxOneContent = this.state.step === 5 
-        ? `<div class="ceq-box-base-wrapper">
-                <div style="margin-bottom: 16px; margin-top: 12px; width: 100%;">
+        ? `<div class="ceq-box-base-wrapper" style="display: flex; flex-wrap: wrap; gap: 12px; text-align: left;">
+                <div style="width: 48%;">
                     <label style="display:block; font-size:12px; color:#737373; margin-bottom:4px; font-weight:600;">Procesador</label>
                     <select class="ceq-form-input" data-action="change-proc" style="width:100%; cursor:pointer;">${procOptions}</select>
                 </div>
-                <div style="width: 100%;">
+                <div style="width: 48%;">
                     <label style="display:block; font-size:12px; color:#737373; margin-bottom:4px; font-weight:600;">Gama / Tipo de uso</label>
                     <select class="ceq-form-input" data-action="change-gama" style="width:100%; cursor:pointer;">${gamaOptions}</select>
                 </div>
+                <div style="width: 48%;">
+                    <label style="display:block; font-size:12px; color:#737373; margin-bottom:4px; font-weight:600;">RAM Adicional</label>
+                    <select class="ceq-form-input" data-action="change-addon-ram" style="width:100%; cursor:pointer;">${ramOptions}</select>
+                </div>
+                <div style="width: 48%;">
+                    <label style="display:block; font-size:12px; color:#737373; margin-bottom:4px; font-weight:600;">Almacenamiento Extra</label>
+                    <select class="ceq-form-input" data-action="change-addon-storage" style="width:100%; cursor:pointer;">${stoOptions}</select>
+                </div>
            </div>`
         : `<div class="ceq-box-title">${laptopName}</div><div class="ceq-box-desc">${specsDescription}</div>`;
+
+      var scrollBtn = this.state.step === 5 ? `
+        <button type="button" data-action="scroll-down" class="ceq-scroll-arrow" title="Ver más opciones">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+        </button>` : "";
 
       var boxOneEyebrow = this.state.step === 5 ? "Configura tu equipo" : "Esta es la mejor opción para tu operación";
 
@@ -537,6 +575,7 @@
         <div class="ceq-layout-split">
             <div class="ceq-layout-left">
                 <div class="ceq-box ceq-box-base" style="text-align: center;">
+                    ${scrollBtn}
                     <div class="ceq-box-eyebrow">${boxOneEyebrow}</div>
                     ${boxOneContent}
                 </div>
@@ -809,11 +848,24 @@
     return match;
   };
 
-  CotizadorUI.prototype.getBasePrice = function () {
+CotizadorUI.prototype.getBasePrice = function () {
     var rule = this.getMatchedRule();
     if (!rule || !this.state.processorId || !this.state.gamaId) return 0;
     var raw = this.config.prices[this.state.processorId]?.[this.state.gamaId]?.[rule.id];
-    return raw ? parseFloat(raw) : 0;
+    var base = raw ? parseFloat(raw) : 0;
+
+    // NUEVO: Sumar adicionales sólo si es paso 5 (manual)
+    if (this.state.step === 5) {
+      if (this.state.addonRamId && this.config.addons?.ram) {
+        var ram = this.config.addons.ram.find(a => a.id === this.state.addonRamId);
+        if (ram) base += parseFloat(ram.price || 0);
+      }
+      if (this.state.addonStorageId && this.config.addons?.storage) {
+        var sto = this.config.addons.storage.find(a => a.id === this.state.addonStorageId);
+        if (sto) base += parseFloat(sto.price || 0);
+      }
+    }
+    return base;
   };
 
   CotizadorUI.prototype.canContinue = function () {
@@ -834,6 +886,7 @@
       periods: r.periods || [],
       combinations: r.combinations || {},
       prices: r.prices || {},
+      addons: r.addons || {ram: [], storage: []},
     };
   };
 

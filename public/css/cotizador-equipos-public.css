@@ -1432,3 +1432,37 @@
   text-transform: uppercase;
   color: #fe5000;
 }
+
+.ceq-scroll-arrow {
+  position: absolute;
+  left: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fe5000;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.ceq-scroll-arrow:hover {
+  background: #fff7ed;
+  color: #ea580c;
+  transform: translateY(-50%) scale(1.1);
+}
+
+@media (max-width: 768px) {
+  .ceq-scroll-arrow {
+    left: 10px;
+    top: 15px;
+    transform: none;
+  }
+}

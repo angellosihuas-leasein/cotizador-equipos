@@ -115,6 +115,34 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 					</div>
 				</div>
 
+				<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+					<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-5 text-slate-800 m-0">Adicionales: Paso 5 (Sólo Modo Manual)</h2>
+					<div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+						<div class="p-4 border border-slate-200 rounded-lg bg-slate-50">
+							<h3 class="text-sm font-bold text-slate-600 uppercase mb-3">Ampliación de RAM</h3>
+							<template x-for="(addon, index) in formData.addons.ram" :key="addon.id">
+								<div class="flex gap-2 mb-2 items-center">
+									<input type="text" x-model="addon.label" placeholder="Ej: 32GB RAM" class="flex-1 font-medium border border-slate-200 rounded p-2 text-sm outline-none focus:border-orange-500">
+									<input type="number" step="0.01" x-model="addon.price" placeholder="Precio S/." class="w-24 border border-slate-200 rounded p-2 text-sm text-center outline-none focus:border-orange-500">
+									<button type="button" @click="formData.addons.ram.splice(index, 1)" class="text-red-500 hover:text-red-700 bg-transparent border-none cursor-pointer p-1 font-bold">X</button>
+								</div>
+							</template>
+							<button type="button" @click="formData.addons.ram.push({id: 'ram_'+Date.now(), label: '', price: 0})" class="mt-2 text-xs font-semibold text-orange-600 bg-transparent border-none cursor-pointer hover:underline">+ Añadir opción de RAM</button>
+						</div>
+						<div class="p-4 border border-slate-200 rounded-lg bg-slate-50">
+							<h3 class="text-sm font-bold text-slate-600 uppercase mb-3">Ampliación de Almacenamiento</h3>
+							<template x-for="(addon, index) in formData.addons.storage" :key="addon.id">
+								<div class="flex gap-2 mb-2 items-center">
+									<input type="text" x-model="addon.label" placeholder="Ej: 1TB SSD" class="flex-1 font-medium border border-slate-200 rounded p-2 text-sm outline-none focus:border-orange-500">
+									<input type="number" step="0.01" x-model="addon.price" placeholder="Precio S/." class="w-24 border border-slate-200 rounded p-2 text-sm text-center outline-none focus:border-orange-500">
+									<button type="button" @click="formData.addons.storage.splice(index, 1)" class="text-red-500 hover:text-red-700 bg-transparent border-none cursor-pointer p-1 font-bold">X</button>
+								</div>
+							</template>
+							<button type="button" @click="formData.addons.storage.push({id: 'sto_'+Date.now(), label: '', price: 0})" class="mt-2 text-xs font-semibold text-orange-600 bg-transparent border-none cursor-pointer hover:underline">+ Añadir opción de Almacenamiento</button>
+						</div>
+					</div>
+				</div>
+
 				<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
 					<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-4 text-slate-800 m-0">Equipos e Imágenes (Por Procesador y Gama)</h2>
 					<div class="overflow-x-auto border border-slate-200 rounded-lg">
@@ -254,6 +282,8 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 				this.formData.processors = this.normalizeItems(incoming.processors, 'proc');
 				this.formData.gamas = this.normalizeItems(incoming.gamas, 'gama');
 				this.formData.periods = this.normalizePeriods(incoming.periods);
+
+				this.formData.addons = incoming.addons || { ram: [], storage: [] };
 				
 				this.formData.combinations = incoming.combinations || {};
 				this.formData.prices = incoming.prices || {};
