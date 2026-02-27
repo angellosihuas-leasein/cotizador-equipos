@@ -9,7 +9,8 @@
 }
 
 .ce-cotizador-wrapper.step-3,
-.ce-cotizador-wrapper.step-4 {
+.ce-cotizador-wrapper.step-4,
+.ce-cotizador-wrapper.step-5{
   max-width: 730px;
   margin: auto;
   display: block;
@@ -288,8 +289,12 @@
   font-size: 12px;
   font-weight: 500;
   color: #737373;
-  transition: all 0.2s;
+  transition: .3s ease all;
   border: 1px solid #ebebeb;
+}
+.ce-cotizador .ceq-tab:hover{
+  border: 1px solid #fe500052;
+  background: #fe50000d;
 }
 .ce-cotizador .ceq-tab.active {
   background-color: #fe5000;
@@ -1053,4 +1058,10 @@
   text-decoration: underline;
   font-weight: 600;
   cursor: pointer;
+}
+
+.ceq-box-base-wrapper{
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
 }

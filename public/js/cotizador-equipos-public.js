@@ -34,6 +34,7 @@
     this.root = root;
     this.config = this.normalizeConfig(config);
     this.state = {
+      mode: "smart", // Identifica si estamos en flujo inteligente o manual
       step: 0,
       processorId: null,
       gamaId: null,
@@ -46,15 +47,13 @@
   }
 
   CotizadorUI.prototype.mount = function () {
-    // 1. Creamos el HTML base.
-    // Fíjate que cerramos el </div> de .ceq-stage ANTES de abrir .ceq-footer
     this.root.innerHTML =
       '<div class="ce-cotizador-wrapper">' +
       '<div class="ceq-stage">' +
       '<div class="ceq-header"></div>' +
       '<div class="ceq-body"></div>' +
-      "</div>" + // Aquí cerramos el contenedor que recibe el fade
-      '<div class="ceq-footer"></div>' + // El footer queda estático
+      "</div>" + 
+      '<div class="ceq-footer"></div>' + 
       '<div class="ceq-modal-root"></div>' +
       "</div>";
 
@@ -75,8 +74,12 @@
       if (!btn) return;
       var action = btn.getAttribute("data-action");
 
-      if (action === "start-smart") self.goToStep(1);
+      if (action === "start-smart") {
+        self.state.mode = "smart";
+        self.goToStep(1);
+      }
       if (action === "go-manual") {
+        self.state.mode = "manual";
         if (!self.state.processorId && self.config.processors.length)
           self.state.processorId = self.config.processors[0].id;
         if (!self.state.gamaId && self.config.gamas.length)
@@ -84,11 +87,27 @@
         self.goToStep(5);
       }
 
-      if (action === "next" && self.canContinue())
-        self.goToStep(self.state.step + 1);
-      if (action === "back")
-        self.goToStep(self.state.step === 5 ? 0 : self.state.step - 1);
+      // Lógica de navegación adaptada a los dos flujos
+      if (action === "next" && self.canContinue()) {
+        if (self.state.step === 3 || self.state.step === 5) {
+          self.goToStep(4);
+        } else {
+          self.goToStep(self.state.step + 1);
+        }
+      }
+
+      if (action === "back") {
+        if (self.state.step === 1 || self.state.step === 5) {
+          self.goToStep(0);
+        } else if (self.state.step === 4) {
+          self.goToStep(self.state.mode === "manual" ? 5 : 3);
+        } else {
+          self.goToStep(self.state.step - 1);
+        }
+      }
+
       if (action === "restart") {
+        self.state.mode = "smart";
         self.state.step = 0;
         self.state.quantity = 1;
         self.state.timeValue = 1;
@@ -174,26 +193,74 @@
       }
     });
 
-    this.root.addEventListener("submit", function (e) {
+    this.root.addEventListener("input", function(e) {
+        if (e.target.name === "nombre") {
+            e.target.value = e.target.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ ]/g, "");
+        }
+    });
+
+    this.root.addEventListener("submit", async function (e) {
       if (e.target.id === "ceq-quote-form") {
         e.preventDefault();
         var formEl = e.target;
         var btn = formEl.querySelector('button[type="submit"]');
         var successEl = self.root.querySelector("#successView");
 
+        if (!self.validateLocalFields(formEl)) return;
+
         btn.classList.add("loading-btn");
+        btn.disabled = true;
 
-        setTimeout(function () {
-          formEl.classList.add("form-animate-out");
-          successEl.classList.add("success-animate-in"); // Ya no usamos 'draw-svg'
+        try {
+            var rucInput = formEl.querySelector('[name="ruc"]');
+            var rucValido = await self.validateRucAPI(rucInput.value);
+            if (!rucValido) {
+                self.showError(rucInput, "El RUC ingresado no existe o no es válido.");
+                btn.classList.remove("loading-btn");
+                btn.disabled = false;
+                return;
+            }
+            
+            var formData = new FormData(formEl);
+            // Agregamos lo necesario para WordPress AJAX
+            formData.append('action', 'cotizador_enviar');
+            formData.append('nonce', cotizadorWP.nonce);
+            
+            // Tus datos de estado
+            formData.append('procesador_id', self.state.processorId);
+            formData.append('gama_id', self.state.gamaId);
+            formData.append('cantidad', self.state.quantity);
+            formData.append('tiempo_valor', self.state.timeValue);
+            formData.append('tiempo_unidad', self.state.timeUnit);
 
-          // Reproducimos la animación Lottie
-          var lottiePlayer = successEl.querySelector("lottie-player");
-          if (lottiePlayer) {
-            lottiePlayer.seek(0); // Reinicia la animación por si se abre de nuevo
-            lottiePlayer.play();
-          }
-        }, 1000);
+            // Enviar a WordPress
+            var resp = await fetch(cotizadorWP.ajax_url, {
+                method: "POST",
+                body: formData
+            });
+
+            var jsonResp = await resp.json();
+
+            if (!jsonResp.success) {
+                throw new Error(jsonResp.data.message || "Error en el envío");
+            }
+
+            // Éxito
+            formEl.classList.add("form-animate-out");
+            successEl.classList.add("success-animate-in"); 
+
+            var lottiePlayer = successEl.querySelector("lottie-player");
+            if (lottiePlayer) {
+              lottiePlayer.seek(0);
+              lottiePlayer.play();
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert("Ocurrió un error al enviar la cotización: " + error.message);
+            btn.classList.remove("loading-btn");
+            btn.disabled = false;
+        }
       }
     });
   };
@@ -203,7 +270,6 @@
     var overlay = this.root.querySelector(".ceq-modal-overlay");
     var successView = this.root.querySelector("#successView");
     
-    // Verificamos si el mensaje de éxito es visible
     var isSuccessActive = successView && successView.classList.contains("success-animate-in");
 
     if (overlay) overlay.classList.add("is-closing");
@@ -211,20 +277,16 @@
     setTimeout(function () {
       self.state.isModalOpen = false;
       
-      // Si el usuario cerró el modal después de enviar el formulario:
       if (isSuccessActive) {
-        // Reiniciamos el estado completo
         self.state.step = 0;
+        self.state.mode = "smart";
         self.state.quantity = 1;
         self.state.timeValue = 1;
         self.state.selectedExtras = { ram: "", almacenamiento: "" };
         self.state.processorId = null;
         self.state.gamaId = null;
-        
-        // Renderizamos todo desde el inicio (Paso 0)
         self.render();
       } else {
-        // Si solo cerró el modal sin enviar, solo refrescamos el modal
         self.renderModal();
       }
     }, 280);
@@ -247,7 +309,6 @@
   CotizadorUI.prototype.render = function () {
     var currentWrapper = this.root.querySelector(".ce-cotizador-wrapper");
     if (currentWrapper) {
-      // Mantiene la clase base + agrega step-N
       currentWrapper.className = "ce-cotizador-wrapper step-" + this.state.step;
     }
 
@@ -293,10 +354,8 @@
   };
 
   CotizadorUI.prototype.getIcon = function (step, i) {
-    // SVGs por paso e índice (i)
     var icons = {
       1: [
-        // Step 1 (processors)
         `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M16.6667 2.5H3.33341C2.41294 2.5 1.66675 3.24619 1.66675 4.16667V12.5C1.66675 13.4205 2.41294 14.1667 3.33341 14.1667H16.6667C17.5872 14.1667 18.3334 13.4205 18.3334 12.5V4.16667C18.3334 3.24619 17.5872 2.5 16.6667 2.5Z" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M6.66675 17.5H13.3334" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
@@ -309,7 +368,6 @@
 </svg>`,
       ],
       2: [
-        // Step 2 (gamas)
         `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M16.6667 2.5H3.33341C2.41294 2.5 1.66675 3.24619 1.66675 4.16667V12.5C1.66675 13.4205 2.41294 14.1667 3.33341 14.1667H16.6667C17.5872 14.1667 18.3334 13.4205 18.3334 12.5V4.16667C18.3334 3.24619 17.5872 2.5 16.6667 2.5Z" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M6.66675 17.5H13.3334" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
@@ -328,7 +386,6 @@
       ],
     };
 
-    // Devuelve SVG o vacío si no existe
     return icons[step] && icons[step][i] ? icons[step][i] : "";
   };
 
@@ -374,7 +431,7 @@
                     </div>
                 </div>
                 <div class="ceq-welcome-visual">
-                    <img src="${cotizadorData.pluginUrl}img/yosellin.png" alt="Especialista" class="ceq-welcome-img" />
+                    <img src="${typeof cotizadorData !== 'undefined' ? cotizadorData.pluginUrl : ''}img/yosellin.png" alt="Especialista" class="ceq-welcome-img" />
                 </div>
             </div>
         `;
@@ -397,13 +454,6 @@
             '</span><span class="ceq-wa-desc">' +
             (t.whatsapp_desc || "") +
             '</span></div></span><span style="color:#ea580c; font-size:24px; font-weight:300;">→</span></a>'
-          : "";
-      var manualLink =
-        this.state.step === 1
-          ? '<div style="text-align:center; margin-top:24px;"><button type="button" class="ceq-btn-ghost" style="color:#ea580c; font-size:15px; text-decoration:underline;" data-action="go-manual">' +
-            (t.manual_link ||
-              "¿Ya conoces lo que quieres? Configúralo manualmente") +
-            "</button></div>"
           : "";
 
       var html = '<div class="ceq-options">';
@@ -444,10 +494,93 @@
     var tPricePerPeriod = pBase * this.state.quantity;
     var finalPriceAbsolute = tPricePerPeriod * this.state.timeValue;
 
+    // --- AQUÍ ESTÁ EL NUEVO PASO 5 (MODO MANUAL) ---
     if (this.state.step === 5) {
-      // (Se omite visualmente el código del paso 5 por espacio, mantenlo igual que en tu código original, solo cambian las variables matemáticas si las tocas).
-      // Aquí asumo que usas tu mismo código para el paso 5.
-      // ... (Usa tu código original del if step === 5)
+      var procOptions = this.config.processors.map(function(p) {
+          return '<option value="' + p.id + '" ' + (p.id === self.state.processorId ? 'selected' : '') + '>' + p.label + '</option>';
+      }).join('');
+      
+      var gamaOptions = this.config.gamas.map(function(g) {
+          return '<option value="' + g.id + '" ' + (g.id === self.state.gamaId ? 'selected' : '') + '>' + g.label + '</option>';
+      }).join('');
+
+      body.innerHTML = `
+        <div class="ceq-layout-split">
+            <div class="ceq-layout-left">
+                <div class="ceq-box ceq-box-base">
+                    <div class="ceq-box-eyebrow">Configura tu equipo</div>
+                    <div class="ceq-box-base-wrapper">
+                      <div style="margin-bottom: 16px; margin-top: 12px;">
+                          <label style="display:block; font-size:12px; color:#737373; margin-bottom:4px; font-weight:600;">Procesador</label>
+                          <select class="ceq-form-input" data-action="change-proc" style="width:100%; cursor:pointer;">
+                              ${procOptions}
+                          </select>
+                      </div>
+                      <div>
+                          <label style="display:block; font-size:12px; color:#737373; margin-bottom:4px; font-weight:600;">Gama / Tipo de uso</label>
+                          <select class="ceq-form-input" data-action="change-gama" style="width:100%; cursor:pointer;">
+                              ${gamaOptions}
+                          </select>
+                      </div>
+                    </div>
+                </div>
+                <div class="ceq-box ceq-box-row">
+                    <div class="ceq-opt-icon" style="border-radius:8px;"><svg width="14" height="12" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M12.2578 7.99996V1.99996C12.2578 1.64634 12.1174 1.3072 11.8673 1.05715C11.6173 0.807102 11.2781 0.666626 10.9245 0.666626H2.92449C2.57087 0.666626 2.23173 0.807102 1.98168 1.05715C1.73164 1.3072 1.59116 1.64634 1.59116 1.99996V7.99996M12.2578 7.99996H1.59116M12.2578 7.99996L13.1112 9.69996C13.1626 9.80195 13.1869 9.91544 13.1818 10.0295C13.1768 10.1436 13.1425 10.2545 13.0822 10.3516C13.022 10.4486 12.9379 10.5285 12.8379 10.5837C12.7379 10.6389 12.6254 10.6674 12.5112 10.6666H1.33783C1.22362 10.6674 1.11112 10.6389 1.01112 10.5837C0.911123 10.5285 0.826974 10.4486 0.766744 10.3516C0.706514 10.2545 0.672223 10.1436 0.66716 10.0295C0.662096 9.91544 0.686429 9.80195 0.737827 9.69996L1.59116 7.99996" stroke="#FE5000" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+</div>
+                    <div class="ceq-opt-main"><div class="ceq-box-title">Cantidad de laptops</div><div class="ceq-box-desc">Unidades a contratar</div></div>
+                    <div>
+                        <div class="ceq-counter-wrap" style="margin:0;">
+                            <button class="ceq-c-btn" style="width:40px;height:40px;font-size:20px;" data-action="qty-minus" data-amount="1">−</button>
+                            <div class="ceq-c-val"><strong style="font-size:24px;margin:0 16px;">${this.state.quantity}</strong></div>
+                            <button class="ceq-c-btn" style="width:40px;height:40px;font-size:20px;" data-action="qty-plus" data-amount="1">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="ceq-box">
+                    <div class="ceq-box-wrapper">
+                        <div class="ceq-box-title">Período de alquiler</div>
+                        <div class="ceq-tabs">
+                            <button class="ceq-tab ${this.state.timeUnit === "semanas" ? "active" : ""}" data-action="set-unit" data-value="semanas">Semanas</button>
+                            <button class="ceq-tab ${this.state.timeUnit === "meses" ? "active" : ""}" data-action="set-unit" data-value="meses">Meses</button>
+                        </div>
+                    </div>
+                    <div class="ceq-counter-wrap">
+                        <button class="ceq-c-btn" data-action="time-minus" data-amount="1">−</button>
+                        <div class="ceq-c-val"><strong>${this.state.timeValue}</strong><span>${this.state.timeUnit}</span></div>
+                        <button class="ceq-c-btn" data-action="time-plus" data-amount="1">+</button>
+                    </div>
+                    <div class="ceq-tip-card">
+                        <div class="ceq-tip-icon">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10 9.33337C10.1333 8.66671 10.4667 8.20004 11 7.66671C11.6667 7.06671 12 6.20004 12 5.33337C12 4.27251 11.5786 3.25509 10.8284 2.50495C10.0783 1.7548 9.06087 1.33337 8 1.33337C6.93913 1.33337 5.92172 1.7548 5.17157 2.50495C4.42143 3.25509 4 4.27251 4 5.33337C4 6.00004 4.13333 6.80004 5 7.66671C5.46667 8.13337 5.86667 8.66671 6 9.33337" stroke="#FE5000" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M6 12H10" stroke="#FE5000" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M6.6665 14.6666H9.33317" stroke="#FE5000" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div class="ceq-tip-content">
+                            <span class="ceq-tip-text">Un tip: a más meses, tu cuota mensual baja.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="ceq-layout-right">
+                <div class="ceq-right-card">
+                    <div class="ceq-circle">
+                        <span class="ceq-circle-lbl">CUOTA MENSUAL</span>
+                        <span class="ceq-circle-val">${this.config.currency_symbol}${Math.round(tPricePerPeriod)}</span>
+                        <span class="ceq-circle-sub">${this.config.currency_symbol}${Math.round(pBase)} x ${this.state.quantity} ${qtyLabel}</span>
+                    </div>
+                    <div class="ceq-info-card">
+                        <span class="ceq-info-label">SISTEMA OPERATIVO</span>
+                        <span class="ceq-info-title">Viene con <br> <strong>Windows Pro</strong></span>
+                        <span class="ceq-info-footer">Precios no incluyen IGV.</span>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+      return;
     }
 
     if (this.state.step === 3) {
@@ -540,19 +673,19 @@
             <div class="ceq-step4-features">
                 <div class="ceq-feat-item">
                     <div class="ceq-feat-icon">
-                      <img src="${cotizadorData.pluginUrl}img/servicio.png" alt="Especialista" class="ceq-step4-features-img" />
+                      <img src="${typeof cotizadorData !== 'undefined' ? cotizadorData.pluginUrl : ''}img/servicio.svg" alt="Especialista" class="ceq-step4-features-img" />
                     </div>
                     <p>Soporte técnico y<br>mantenimiento incluido</p>
                 </div>
                 <div class="ceq-feat-item">
                     <div class="ceq-feat-icon">
-                      <img src="${cotizadorData.pluginUrl}img/portatil.png" alt="Especialista" class="ceq-step4-features-img" />
+                      <img src="${typeof cotizadorData !== 'undefined' ? cotizadorData.pluginUrl : ''}img/portatil.svg" alt="Especialista" class="ceq-step4-features-img" />
                     </div>
                     <p>Laptop de reemplazo<br>inmediata por fallas</p>
                 </div>
                 <div class="ceq-feat-item">
                     <div class="ceq-feat-icon">
-                      <img src="${cotizadorData.pluginUrl}img/camion.png" alt="Especialista" class="ceq-step4-features-img" />
+                      <img src="${typeof cotizadorData !== 'undefined' ? cotizadorData.pluginUrl : ''}img/camion.svg" alt="Especialista" class="ceq-step4-features-img" />
                     </div>
                     <p>Configuración y entrega<br>en tus oficinas</p>
                 </div>
@@ -568,48 +701,49 @@
       return;
     }
 
-    var restartBtn =
-      '<button class="ceq-btn-ghost" data-action="restart"><svg style="width:20px;height:20px;margin-right:8px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Volver a empezar</button>';
+    var back =
+      '<button class="ceq-btn-ghost" data-action="back"><svg style="width:20px;height:20px;margin-right:8px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg> Volver</button>';
 
     if (this.state.step === 4) {
+      // Ocultamos el link de "cotiza manual aquí" si ya vino por el flujo manual
+      var manualLinkHtml = this.state.mode === 'manual' 
+        ? '' 
+        : `<div class="ceq-s4-manual-link">
+              ¿Ya conoces lo que necesitas? <button data-action="go-manual">Cotiza aquí</button>
+          </div>`;
+
       footer.innerHTML = `
         <div class="ceq-s4-footer-wrap">
             <div class="ceq-s4-actions">
                 <button class="ceq-btn-ghost-dark" data-action="back">← Volver</button>
                 <button class="ceq-btn-primary ceq-s4-btn" data-action="open-modal">Quiero la cotización en mi correo →</button>
             </div>
-            <div class="ceq-s4-manual-link">
-                ¿Ya conoces lo que necesitas? <button data-action="go-manual">Cotiza aquí</button>
-            </div>
+            ${manualLinkHtml}
         </div>
       `;
       return;
     }
 
-    if (this.state.step === 5) {
-      footer.innerHTML = restartBtn + "<div></div>";
-      return;
-    }
-
-    var back =
-      '<button class="ceq-btn-ghost" data-action="back"><svg style="width:20px;height:20px;margin-right:8px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg> Volver</button>';
     var nextBtn =
       '<button class="ceq-btn-primary" data-action="next" ' +
       (this.canContinue() ? "" : "disabled") +
       ">" +
-      (this.state.step === 3 ? "Ver mi solución →" : "Continuar →") +
+      ((this.state.step === 3 || this.state.step === 5) ? "Ver mi solución →" : "Continuar →") +
       "</button>";
 
-    // Estructuramos el footer con contenedores para forzar que el enlace baje
+    var manualLink = (this.state.step === 5 || this.state.mode === 'manual')
+      ? ''
+      : `<div class="ceq-s4-manual-link" style="text-align: center; margin-top: 24px;">
+            ¿Ya conoces lo que necesitas? <button type="button" data-action="go-manual" style="background: none; border: none; cursor: pointer; color: inherit; font-family: inherit; font-size: inherit; padding: 0;">Cotiza aquí</button>
+        </div>`;
+
     footer.innerHTML = `
         <div style="width: 100%;">
             <div style="display: flex; justify-content: space-between; width: 100%;">
                 ${back}
                 ${nextBtn}
             </div>
-            <div class="ceq-s4-manual-link" style="text-align: center; margin-top: 24px;">
-                ¿Ya conoces lo que necesitas? <button type="button" data-action="go-manual" style="background: none; border: none; cursor: pointer; color: inherit; font-family: inherit; font-size: inherit; padding: 0;">Cotiza aquí</button>
-            </div>
+            ${manualLink}
         </div>
     `;
   };
@@ -633,19 +767,22 @@
                     <p class="ceq-modal-desc">Te enviaremos un PDF formal con todos los detalles.</p>
                     <div class="ceq-form-group">
                         <label class="ceq-form-label">RUC *</label>
-                        <input type="text" class="ceq-form-input" required placeholder="10... / 20...">
+                        <input type="text" name="ruc" class="ceq-form-input" required placeholder="10... / 20...">
+                        <span class="ceq-form-error" style="color: red; font-size: 12px; display: none;"></span>
                     </div>
                     <div class="ceq-form-group">
                         <label class="ceq-form-label">Nombre completo *</label>
-                        <input type="text" class="ceq-form-input" required placeholder="Juan Pérez">
+                        <input type="text" name="nombre" class="ceq-form-input" required placeholder="Juan Pérez">
                     </div>
                     <div class="ceq-form-group">
                         <label class="ceq-form-label">Correo corporativo *</label>
-                        <input type="email" class="ceq-form-input" required placeholder="juan@empresa.com">
+                        <input type="email" name="correo" class="ceq-form-input" required placeholder="juan@empresa.com">
+                        <span class="ceq-form-error" style="color: red; font-size: 12px; display: none;"></span>
                     </div>
                     <div class="ceq-form-group">
                         <label class="ceq-form-label">WhatsApp (Opcional)</label>
-                        <input type="tel" class="ceq-form-input" placeholder="+51 999 999 999">
+                        <input type="tel" name="telefono" class="ceq-form-input" placeholder="+51 999 999 999">
+                        <span class="ceq-form-error" style="color: red; font-size: 12px; display: none;"></span>
                     </div>
                     <button type="submit" class="ceq-btn-primary ceq-btn-block">
                         <span class="btn-text">Enviar cotización</span>
@@ -655,7 +792,7 @@
 
                 <div id="successView" class="success-wrapper">
                     <lottie-player 
-                        src="${cotizadorData.pluginUrl}js/animacion.json" 
+                        src="${typeof cotizadorData !== 'undefined' ? cotizadorData.pluginUrl : ''}js/animacion.json" 
                         background="transparent" 
                         speed="1" 
                         style="width: 180px; height: 180px;" 
@@ -714,8 +851,9 @@
   CotizadorUI.prototype.canContinue = function () {
     if (this.state.step === 1) return !!this.state.processorId;
     if (this.state.step === 2) return !!this.state.gamaId;
-    if (this.state.step === 3)
-      return !!this.getMatchedRule() && this.getBasePrice() > 0;
+    // Si estamos en el paso 3 o 5, necesitamos que todo esté validado para avanzar al resumen.
+    if (this.state.step === 3 || this.state.step === 5)
+      return !!this.getMatchedRule() && this.getBasePrice() > 0 && !!this.state.processorId && !!this.state.gamaId;
     return true;
   };
 
@@ -730,6 +868,83 @@
       extras: r.extras || [],
       prices: r.prices || {},
     };
+  };
+
+
+// --- NUEVOS MÉTODOS DE VALIDACIÓN Y ENVÍO ---
+
+  CotizadorUI.prototype.validateLocalFields = function (formEl) {
+    var isValid = true;
+    var ruc = formEl.querySelector('[name="ruc"]');
+    var correo = formEl.querySelector('[name="correo"]');
+    var telefono = formEl.querySelector('[name="telefono"]');
+
+    // Limpiar errores previos
+    formEl.querySelectorAll('.ceq-form-error').forEach(e => { e.style.display = 'none'; e.innerText = ''; });
+
+    // Validar RUC (Debe empezar con 20 y tener 11 dígitos)
+    var rucVal = ruc.value.trim();
+    if (!/^20\d{9}$/.test(rucVal)) {
+        this.showError(ruc, "El RUC debe comenzar con 20 y tener 11 dígitos numéricos.");
+        isValid = false;
+    }
+
+    // Validar Correo Corporativo
+    var emailVal = correo.value.trim();
+    var emailDomain = emailVal.split("@")[1] || "";
+    var invalidDomains = ["gmail.com", "hotmail.com", "outlook.com", "gmail.pe", "hotmail.pe", "outlook.pe", "yahoo.com"];
+    if (invalidDomains.includes(emailDomain.toLowerCase())) {
+        this.showError(correo, "Por favor, ingresa un correo corporativo válido.");
+        isValid = false;
+    }
+
+    // Validar Teléfono (Si se ingresó, debe empezar con 9 y tener 9 dígitos)
+    var telVal = telefono.value.trim();
+    if (telVal !== "" && !/^9\d{8}$/.test(telVal)) {
+        this.showError(telefono, "El número debe empezar con 9 y tener 9 dígitos.");
+        isValid = false;
+    }
+
+    return isValid;
+  };
+
+  CotizadorUI.prototype.showError = function(inputEl, message) {
+      var errorEl = inputEl.nextElementSibling;
+      if (errorEl && errorEl.classList.contains('ceq-form-error')) {
+          errorEl.innerText = message;
+          errorEl.style.display = 'block';
+      }
+  };
+
+  CotizadorUI.prototype.validateRucAPI = async function (rucValue) {
+      try {
+          var fd = new FormData();
+          fd.append("action", "cotizador_validar_ruc"); // El nombre de la acción WP
+          fd.append("nonce", cotizadorWP.nonce);        // El token de seguridad WP
+          fd.append("ruc", rucValue);
+
+          var resp = await fetch(cotizadorWP.ajax_url, { 
+              method: "POST", 
+              body: fd 
+          });
+          
+          var json = await resp.json();
+          return json.success; 
+      } catch (e) {
+          console.error("Error validando RUC", e);
+          return false;
+      }
+  };
+
+  CotizadorUI.prototype.fetchCSRF = async function () {
+      // NOTA: Igual que arriba, temporalmente usamos tu ruta.
+      try {
+          var r = await fetch("/contacto/csrf_boot.php?form_id=cotizador_plugin");
+          return await r.json();
+      } catch (e) {
+          console.error("Error obteniendo CSRF", e);
+          return null;
+      }
   };
 
   if (document.readyState === "loading")
