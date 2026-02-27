@@ -462,7 +462,7 @@
             (t.whatsapp_label || "Quiero hablar con un especialista") +
             '</span><div class="wsp-option-chip">consultar</div></div><span class="ceq-wa-desc">' +
             (t.whatsapp_desc || "") +
-            '</span></div></span><span style="color:#ea580c; font-size:24px; visibility: hidden;">→</span></a>'
+            '</span></div></span><span style="color:#fe5000; font-size:24px; visibility: hidden;">→</span></a>'
           : "";
 
       var html = '<div class="ceq-options">';
@@ -505,6 +505,9 @@
     var procData = this.config.processors.find((p) => p.id === this.state.processorId);
     var laptopName = combData.name || (procData ? procData.label : "Laptop Estándar");
 
+    var procRealName = procData ? procData.label : "Procesador no definido";
+    var specsDescription = procRealName + " | 16GB RAM | 512 GB SSD";
+
     if (this.state.step === 5 || this.state.step === 3) {
       var procOptions = this.config.processors.map(function(p) {
           return '<option value="' + p.id + '" ' + (p.id === self.state.processorId ? 'selected' : '') + '>' + p.label + '</option>';
@@ -526,14 +529,14 @@
                     <select class="ceq-form-input" data-action="change-gama" style="width:100%; cursor:pointer;">${gamaOptions}</select>
                 </div>
            </div>`
-        : `<div class="ceq-box-title">${laptopName}</div><div class="ceq-box-desc">Tu equipo ideal según tus necesidades.</div>`;
+        : `<div class="ceq-box-title">${laptopName}</div><div class="ceq-box-desc">${specsDescription}</div>`;
 
-      var boxOneEyebrow = this.state.step === 5 ? "Configura tu equipo" : "Tu equipo base incluye";
+      var boxOneEyebrow = this.state.step === 5 ? "Configura tu equipo" : "Esta es la mejor opción para tu operación";
 
       body.innerHTML = `
         <div class="ceq-layout-split">
             <div class="ceq-layout-left">
-                <div class="ceq-box ceq-box-base">
+                <div class="ceq-box ceq-box-base" style="text-align: center;">
                     <div class="ceq-box-eyebrow">${boxOneEyebrow}</div>
                     ${boxOneContent}
                 </div>
@@ -591,7 +594,7 @@
 
     if (this.state.step === 4) {
       var laptopImageHtml = combData.image 
-        ? `<img src="${combData.image}" alt="${laptopName}" style="max-width: 140%; max-height: 140%; object-fit: contain; margin-right: -40px;">` 
+        ? `<img src="${combData.image}" alt="${laptopName}" style="max-width: 100%; max-height: 100%; object-fit: contain; max-width: 360px;">` 
         : '';
 
       body.innerHTML = `
@@ -599,7 +602,7 @@
             <div class="ceq-step4-top">
                 <div class="ceq-step4-price-circle">
                     <div class="ceq-s4-lbl">COSTO MENSUAL<br>POR LAPTOP*</div>
-                    <div class="ceq-s4-specs" style="color: #ea580c; font-size: 22px; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">${laptopName}</div>
+                    <div class="ceq-s4-specs" style="color: #fe5000; font-size: 20px; font-weight: 600; text-transform: uppercase; margin-bottom: 10px;">${laptopName}</div>
                     <div class="ceq-s4-price"><span>${this.config.currency_symbol}</span> ${Math.round(pBase)}</div>
                     <div class="ceq-s4-disc">*El precio no incluye IGV.</div>
                 </div>

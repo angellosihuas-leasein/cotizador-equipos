@@ -118,7 +118,7 @@
   width: 100%;
   text-align: left;
   justify-content: space-between;
-  margin-top: 24px;
+  margin-top: 15px;
 }
 
 .wsp-wrapper-text {
@@ -171,7 +171,7 @@
 .ce-cotizador .ceq-options {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 15px;
 }
 
 .ce-cotizador .ceq-option {
@@ -195,7 +195,7 @@
 .ce-cotizador .ceq-option.is-selected {
   border-color: #fe5000;
   box-shadow: 0 0 0 1px #fe5000;
-  transition: .3s ease all;
+  transition: 0.3s ease all;
 }
 
 .ce-cotizador .ceq-option svg * {
@@ -223,19 +223,19 @@
   background-color: #f3f4f6;
   color: #666;
   flex-shrink: 0;
-  transition: .3s ease all;
+  transition: 0.3s ease all;
 }
 
 .ce-cotizador .ceq-opt-icon svg {
   width: 24px;
   height: 24px;
-  transition: .3s ease all;
+  transition: 0.3s ease all;
 }
 
 .ce-cotizador .ceq-option.is-selected .ceq-opt-icon {
   background-color: #fe5000;
   color: #fff;
-  transition: .3s ease all !important;
+  transition: 0.3s ease all !important;
 }
 
 .ce-cotizador .ceq-opt-main {
@@ -275,7 +275,7 @@
   border: 1px solid #e5e7eb;
   border-radius: 16px;
   padding: 15px 18px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .ce-cotizador .ceq-box:last-child {
@@ -289,18 +289,17 @@
 }
 
 .ce-cotizador .ceq-box-base {
-  background-color: #f9fafb;
+  background-color: transparent;
   border-style: dashed;
   border-color: #d1d5db;
+  text-align: center;
 }
 
 .ce-cotizador .ceq-box-eyebrow {
-  font-size: 11px;
-  font-weight: 700;
-  color: #666;
+  font-size: 14px;
+  font-weight: 600;
+  color: #000;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 8px;
 }
 
 .ce-cotizador .ceq-box-title {
@@ -525,17 +524,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 32px;
-  padding-top: 24px;
+  margin-top: 10px;
+  padding-top: 20px;
 }
 
 .ce-cotizador .ceq-btn-primary {
   background-color: #fe5000;
   color: #fff;
-  padding: 14px 32px;
-  border-radius: 999px;
-  font-size: 16px;
-  font-weight: 700;
+  padding: 13px 25px;
+  border-radius: 15px;
+  font-size: 14px;
+  font-weight: 600;
   transition: all 0.2s;
   display: inline-flex;
   justify-content: center;
@@ -843,12 +842,11 @@
 }
 
 .ce-cotizador .ceq-btn-outline {
-  background-color: #fff0;
-  color: #111827;
-  border: 1px solid #111827;
-  padding: 13px 28px;
-  border-radius: 999px;
-  font-size: 16px;
+  color: #737373;
+  border: 1px solid #737373;
+  padding: 12px 25px;
+  border-radius: 15px;
+  font-size: 14px;
   font-weight: 600;
   transition: all 0.2s ease;
   display: inline-flex;
@@ -1081,31 +1079,33 @@
 
 .ceq-step4-top {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
   position: relative;
   padding: 20px;
+  align-items: center;
+  justify-content: center;
+  gap: 0px;
 }
 
 .ceq-step4-price-circle {
   background: #fff;
   border-radius: 50%;
-  width: 320px;
-  height: 320px;
+  width: 280px;
+  height: 280px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
   box-shadow: 0 10px 40px rgb(0 0 0 / 0.05);
-  z-index: 2;
+  z-index: 0;
   padding: 30px;
+  transform: translateX(20px);
 }
 
 .ceq-s4-lbl {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 700;
-  color: #6b7280;
+  color: #737373;
   line-height: 1.2;
   margin-bottom: 8px;
 }
@@ -1117,9 +1117,9 @@
 }
 
 .ceq-s4-price {
-  font-size: 70px;
+  font-size: 50px;
   font-weight: 800;
-  color: #374151;
+  color: #000;
   line-height: 1;
   display: flex;
   align-items: flex-start;
@@ -1127,22 +1127,20 @@
 }
 
 .ceq-s4-price span {
-  font-size: 35px;
+  font-size: 30px;
   margin-top: 10px;
 }
 
 .ceq-s4-disc {
-  font-size: 12px;
-  color: #6b7280;
+  font-size: 11px;
+  color: #404040;
   margin-top: 15px;
 }
 
 .ceq-step4-images {
-  position: absolute;
   right: 0;
   top: 50%;
-  transform: translateY(-50%);
-  width: 50%;
+  transform: translateX(-20px);
   height: 100%;
   display: flex;
   justify-content: flex-end;
@@ -1247,7 +1245,6 @@
 }
 
 @keyframes subtle-shake {
-
   0%,
   100% {
     transform: translateX(0);
@@ -1369,7 +1366,7 @@
   width: 20px;
   height: 20px;
   margin-top: 2px;
-  accent-color: #FE5000;
+  accent-color: #fe5000;
   cursor: pointer;
 }
 
@@ -1386,18 +1383,52 @@
   font-weight: 600;
 }
 
-.wrapper-stps-btns{
+.wrapper-stps-btns {
   display: flex;
   justify-content: center;
   width: 100%;
 }
+
 .ce-cotizador-wrapper.step-3 .wrapper-stps-btns,
 .ce-cotizador-wrapper.step-4 .wrapper-stps-btns,
-.ce-cotizador-wrapper.step-5 .wrapper-stps-btns{
+.ce-cotizador-wrapper.step-5 .wrapper-stps-btns {
   justify-content: space-between;
 }
-.ceq-layout-left{
-  max-height: 440px;
+
+.ceq-layout-left {
+  max-height: 450px;
   overflow-y: scroll;
 }
 
+.ce-cotizador-wrapper.step-5 .ceq-layout-left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ce-cotizador-wrapper.step-5 .ceq-layout-left > div {
+  margin-bottom: 0px !important;
+}
+
+.ce-cotizador-wrapper.step-5 .ceq-layout-left > div:nth-child(1) {
+  order: 3;
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 15px 18px;
+}
+
+.ce-cotizador-wrapper.step-5 .ceq-layout-left > div:nth-child(2) {
+  order: 2;
+}
+
+.ce-cotizador-wrapper.step-5 .ceq-layout-left > div:nth-child(3) {
+  order: 1;
+}
+
+.ce-cotizador-wrapper.step-3 .ceq-box:first-child .ceq-box-title {
+  font-size: 20px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #fe5000;
+}
