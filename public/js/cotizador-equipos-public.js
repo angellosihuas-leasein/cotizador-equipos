@@ -4,7 +4,6 @@
   function loadLottieScript() {
     var lottieUrl =
       "https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js";
-    // Verificamos que no se haya cargado antes para evitar duplicados
     if (!document.querySelector('script[src="' + lottieUrl + '"]')) {
       var script = document.createElement("script");
       script.src = lottieUrl;
@@ -15,6 +14,82 @@
 
   function initCotizadores() {
     loadLottieScript();
+    
+    // Inyectar CSS necesario para las nuevas animaciones y alertas
+    var style = document.createElement('style');
+    style.innerHTML = `
+        @keyframes subtle-shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-3px); }
+            40% { transform: translateX(3px); }
+            60% { transform: translateX(-3px); }
+            80% { transform: translateX(3px); }
+        }
+        .animate-error-shake {
+            animation: subtle-shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+        .error-container {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: all 0.3s ease-in-out;
+            opacity: 0;
+            margin-top: 0;
+        }
+        .error-container.show-error {
+            grid-template-rows: 1fr;
+            opacity: 1;
+            margin-top: 6px;
+        }
+        .error-inner {
+            overflow: hidden;
+        }
+        .ceq-error-pill {
+            display: inline-flex;
+            align-items: flex-start;
+            gap: 8px;
+            background-color: rgba(254, 242, 242, 0.9);
+            border: 1px solid #fee2e2;
+            padding: 8px 12px;
+            border-radius: 8px;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            width: max-content;
+        }
+        .ceq-error-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #ef4444;
+            flex-shrink: 0;
+            margin-top: 6px;
+        }
+        .ceq-error-text {
+            font-size: 12px;
+            font-weight: 500;
+            color: #dc2626;
+            line-height: 1.3;
+        }
+        .ceq-input-error {
+            background-color: #ffffff !important;
+            border-color: #fca5a5 !important;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.05) !important;
+        }
+        /* Fix Loader */
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #fff;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin: 0 auto;
+        }
+        .loading-btn .loader { display: block; }
+        .loading-btn .btn-text { display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    `;
+    document.head.appendChild(style);
 
     var containers = document.querySelectorAll(".ce-cotizador[data-ce-config]");
     containers.forEach(function (container) {
@@ -34,7 +109,7 @@
     this.root = root;
     this.config = this.normalizeConfig(config);
     this.state = {
-      mode: "smart", // Identifica si estamos en flujo inteligente o manual
+      mode: "smart",
       step: 0,
       processorId: null,
       gamaId: null,
@@ -87,7 +162,6 @@
         self.goToStep(5);
       }
 
-      // Lógica de navegación adaptada a los dos flujos
       if (action === "next" && self.canContinue()) {
         if (self.state.step === 3 || self.state.step === 5) {
           self.goToStep(4);
@@ -115,16 +189,18 @@
         self.goToStep(0);
       }
 
+      // Avance Automático
       if (action === "select-processor") {
         self.state.processorId = btn.getAttribute("data-value");
-        self.renderBody();
-        self.renderFooter();
+        self.renderBody(); 
+        setTimeout(() => { if(self.canContinue()) self.goToStep(2); }, 400);
       }
       if (action === "select-gama") {
         self.state.gamaId = btn.getAttribute("data-value");
         self.renderBody();
-        self.renderFooter();
+        setTimeout(() => { if(self.canContinue()) self.goToStep(3); }, 400);
       }
+      
       if (action === "set-unit") {
         self.state.timeUnit = btn.getAttribute("data-value");
         self.state.timeValue = 1;
@@ -132,34 +208,22 @@
         self.renderFooter();
       }
       if (action === "time-minus") {
-        self.state.timeValue = Math.max(
-          1,
-          self.state.timeValue - parseInt(btn.getAttribute("data-amount")),
-        );
+        self.state.timeValue = Math.max(1, self.state.timeValue - parseInt(btn.getAttribute("data-amount")));
         self.renderBody();
         self.renderFooter();
       }
       if (action === "time-plus") {
-        self.state.timeValue = Math.min(
-          999,
-          self.state.timeValue + parseInt(btn.getAttribute("data-amount")),
-        );
+        self.state.timeValue = Math.min(999, self.state.timeValue + parseInt(btn.getAttribute("data-amount")));
         self.renderBody();
         self.renderFooter();
       }
       if (action === "qty-minus") {
-        self.state.quantity = Math.max(
-          1,
-          self.state.quantity - parseInt(btn.getAttribute("data-amount")),
-        );
+        self.state.quantity = Math.max(1, self.state.quantity - parseInt(btn.getAttribute("data-amount")));
         self.renderBody();
         self.renderFooter();
       }
       if (action === "qty-plus") {
-        self.state.quantity = Math.min(
-          999,
-          self.state.quantity + parseInt(btn.getAttribute("data-amount")),
-        );
+        self.state.quantity = Math.min(999, self.state.quantity + parseInt(btn.getAttribute("data-amount")));
         self.renderBody();
         self.renderFooter();
       }
@@ -185,17 +249,42 @@
         self.renderBody();
         self.renderFooter();
       }
-      if (action === "change-extra") {
-        var type = e.target.getAttribute("data-type");
-        self.state.selectedExtras[type] = e.target.value;
-        self.renderBody();
-        self.renderFooter();
-      }
     });
 
+    // Validaciones de Entrada en Tiempo Real
     this.root.addEventListener("input", function(e) {
         if (e.target.name === "nombre") {
             e.target.value = e.target.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ ]/g, "");
+            self.clearError(e.target);
+        }
+        if (e.target.name === "ruc") {
+             e.target.value = e.target.value.replace(/\D/g, ''); 
+             self.clearError(e.target);
+             
+             if(e.target.value.length > 0 && e.target.value[0] !== '2') {
+                 self.showError(e.target, "El RUC debe comenzar con 20");
+             }
+        }
+        if (e.target.name === "telefono") {
+            e.target.value = e.target.value.replace(/\D/g, '');
+            self.clearError(e.target);
+            
+            if(e.target.value.length > 0 && e.target.value[0] !== '9') {
+                 self.showError(e.target, "El número debe empezar con 9");
+             }
+        }
+        if (e.target.name === "correo") {
+            self.clearError(e.target);
+        }
+    });
+
+    // Validar al perder el foco
+    this.root.addEventListener("focusout", function(e) {
+        if(e.target.name === "ruc" && e.target.value.length > 0 && e.target.value.length < 11) {
+             self.showError(e.target, "El RUC debe tener 11 dígitos");
+        }
+        if(e.target.name === "telefono" && e.target.value.length > 0 && e.target.value.length < 9) {
+             self.showError(e.target, "El número debe tener 9 dígitos");
         }
     });
 
@@ -203,6 +292,14 @@
       if (e.target.id === "ceq-quote-form") {
         e.preventDefault();
         var formEl = e.target;
+        
+        // Anti-spam Honeypot Check
+        var honeypot = formEl.querySelector('[name="website_url"]');
+        if(honeypot && honeypot.value !== '') {
+            console.warn("Bot detectado");
+            return; // Bloqueo silencioso
+        }
+
         var btn = formEl.querySelector('button[type="submit"]');
         var successEl = self.root.querySelector("#successView");
 
@@ -215,25 +312,22 @@
             var rucInput = formEl.querySelector('[name="ruc"]');
             var rucValido = await self.validateRucAPI(rucInput.value);
             if (!rucValido) {
-                self.showError(rucInput, "El RUC ingresado no existe o no es válido.");
+                self.showError(rucInput, "El RUC ingresado no existe en SUNAT.");
                 btn.classList.remove("loading-btn");
                 btn.disabled = false;
                 return;
             }
             
             var formData = new FormData(formEl);
-            // Agregamos lo necesario para WordPress AJAX
             formData.append('action', 'cotizador_enviar');
             formData.append('nonce', cotizadorWP.nonce);
             
-            // Tus datos de estado
             formData.append('procesador_id', self.state.processorId);
             formData.append('gama_id', self.state.gamaId);
             formData.append('cantidad', self.state.quantity);
             formData.append('tiempo_valor', self.state.timeValue);
             formData.append('tiempo_unidad', self.state.timeUnit);
 
-            // Enviar a WordPress
             var resp = await fetch(cotizadorWP.ajax_url, {
                 method: "POST",
                 body: formData
@@ -245,7 +339,6 @@
                 throw new Error(jsonResp.data.message || "Error en el envío");
             }
 
-            // Éxito
             formEl.classList.add("form-animate-out");
             successEl.classList.add("success-animate-in"); 
 
@@ -449,11 +542,11 @@
         this.state.step === 1
           ? '<a class="ceq-whatsapp-cta" href="' +
             (t.whatsapp_url || "https://wa.me/") +
-            '" target="_blank"><div class="wsp-wrapper-text"><span class="ceq-opt-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1165_252)"><path d="M10.6916 1.81668C10.4744 1.71764 10.2385 1.66638 9.99989 1.66638C9.76123 1.66638 9.52536 1.71764 9.30822 1.81668L2.16656 5.06668C2.01868 5.13188 1.89295 5.23868 1.80469 5.37406C1.71643 5.50944 1.66943 5.66757 1.66943 5.82918C1.66943 5.99079 1.71643 6.14892 1.80469 6.2843C1.89295 6.41968 2.01868 6.52648 2.16656 6.59168L9.31656 9.85001C9.53369 9.94905 9.76956 10.0003 10.0082 10.0003C10.2469 10.0003 10.4828 9.94905 10.6999 9.85001L17.8499 6.60001C17.9978 6.53481 18.1235 6.42801 18.2118 6.29263C18.3 6.15725 18.347 5.99913 18.347 5.83751C18.347 5.6759 18.3 5.51777 18.2118 5.38239C18.1235 5.24701 17.9978 5.14022 17.8499 5.07501L10.6916 1.81668Z" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.3334 14.7084L10.6917 18.175C10.4746 18.2741 10.2387 18.3253 10.0001 18.3253C9.76142 18.3253 9.52555 18.2741 9.30841 18.175L1.66675 14.7084" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.3334 10.5416L10.6917 14.0083C10.4746 14.1073 10.2387 14.1586 10.0001 14.1586C9.76142 14.1586 9.52555 14.1073 9.30841 14.0083L1.66675 10.5416" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/></g><defs><clipPath id="clip0_1165_252"><rect width="20" height="20" fill="white"/></clipPath></defs></svg></span><span class="ceq-wa-text"><span class="ceq-wa-title">' +
+            '" target="_blank"><div class="wsp-wrapper-text"><span class="ceq-opt-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1165_252)"><path d="M10.6916 1.81668C10.4744 1.71764 10.2385 1.66638 9.99989 1.66638C9.76123 1.66638 9.52536 1.71764 9.30822 1.81668L2.16656 5.06668C2.01868 5.13188 1.89295 5.23868 1.80469 5.37406C1.71643 5.50944 1.66943 5.66757 1.66943 5.82918C1.66943 5.99079 1.71643 6.14892 1.80469 6.2843C1.89295 6.41968 2.01868 6.52648 2.16656 6.59168L9.31656 9.85001C9.53369 9.94905 9.76956 10.0003 10.0082 10.0003C10.2469 10.0003 10.4828 9.94905 10.6999 9.85001L17.8499 6.60001C17.9978 6.53481 18.1235 6.42801 18.2118 6.29263C18.3 6.15725 18.347 5.99913 18.347 5.83751C18.347 5.6759 18.3 5.51777 18.2118 5.38239C18.1235 5.24701 17.9978 5.14022 17.8499 5.07501L10.6916 1.81668Z" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.3334 14.7084L10.6917 18.175C10.4746 18.2741 10.2387 18.3253 10.0001 18.3253C9.76142 18.3253 9.52555 18.2741 9.30841 18.175L1.66675 14.7084" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.3334 10.5416L10.6917 14.0083C10.4746 14.1073 10.2387 14.1586 10.0001 14.1586C9.76142 14.1586 9.52555 14.1073 9.30841 14.0083L1.66675 10.5416" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/></g><defs><clipPath id="clip0_1165_252"><rect width="20" height="20" fill="white"/></clipPath></defs></svg></span><span class="ceq-wa-text"><div class="wsp-option-chip-wrapper"><span class="ceq-wa-title">' +
             (t.whatsapp_label || "Quiero hablar con un especialista") +
-            '</span><span class="ceq-wa-desc">' +
+            '</span><div class="wsp-option-chip">consultar</div></div><span class="ceq-wa-desc">' +
             (t.whatsapp_desc || "") +
-            '</span></div></span><span style="color:#ea580c; font-size:24px; font-weight:300;">→</span></a>'
+            '</span></div></span><span style="color:#ea580c; font-size:24px; visibility: hidden;">→</span></a>'
           : "";
 
       var html = '<div class="ceq-options">';
@@ -492,9 +585,7 @@
     var qtyLabel = this.state.quantity > 1 ? "laptops" : "laptop";
     var pBase = this.getBasePrice();
     var tPricePerPeriod = pBase * this.state.quantity;
-    var finalPriceAbsolute = tPricePerPeriod * this.state.timeValue;
 
-    // --- AQUÍ ESTÁ EL NUEVO PASO 5 (MODO MANUAL) ---
     if (this.state.step === 5) {
       var procOptions = this.config.processors.map(function(p) {
           return '<option value="' + p.id + '" ' + (p.id === self.state.processorId ? 'selected' : '') + '>' + p.label + '</option>';
@@ -701,41 +792,39 @@
       return;
     }
 
+    var t = this.config.texts || {};
+    // Aquí puedes poner el número de WhatsApp oficial de Leasein
+    var waUrl = t.whatsapp_url || "https://wa.me/51987146591"; 
+
     var back =
       '<button class="ceq-btn-ghost" data-action="back"><svg style="width:20px;height:20px;margin-right:8px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg> Volver</button>';
 
-    if (this.state.step === 4) {
-      // Ocultamos el link de "cotiza manual aquí" si ya vino por el flujo manual
-      var manualLinkHtml = this.state.mode === 'manual' 
-        ? '' 
-        : `<div class="ceq-s4-manual-link">
-              ¿Ya conoces lo que necesitas? <button data-action="go-manual">Cotiza aquí</button>
-          </div>`;
+    // --- NUEVO ENLACE A WHATSAPP ---
+    var whatsappLinkHtml = `
+        <div class="ceq-s4-manual-link" style="text-align: center; margin-top: 24px; font-size: 14px; color: #737373;">
+            ¿Tienes dudas? <a href="${waUrl}" target="_blank" style="text-decoration: none; font-weight: 600;">Conversa con un especialista <img src="${typeof cotizadorData !== 'undefined' ? cotizadorData.pluginUrl : ''}img/whatsapp.svg" alt="WhatsApp Icon"></a>
+        </div>`;
 
+    if (this.state.step === 4) {
       footer.innerHTML = `
         <div class="ceq-s4-footer-wrap">
             <div class="ceq-s4-actions">
                 <button class="ceq-btn-ghost-dark" data-action="back">← Volver</button>
                 <button class="ceq-btn-primary ceq-s4-btn" data-action="open-modal">Quiero la cotización en mi correo →</button>
             </div>
-            ${manualLinkHtml}
+            ${whatsappLinkHtml}
         </div>
       `;
       return;
     }
 
-    var nextBtn =
-      '<button class="ceq-btn-primary" data-action="next" ' +
-      (this.canContinue() ? "" : "disabled") +
-      ">" +
-      ((this.state.step === 3 || this.state.step === 5) ? "Ver mi solución →" : "Continuar →") +
-      "</button>";
-
-    var manualLink = (this.state.step === 5 || this.state.mode === 'manual')
-      ? ''
-      : `<div class="ceq-s4-manual-link" style="text-align: center; margin-top: 24px;">
-            ¿Ya conoces lo que necesitas? <button type="button" data-action="go-manual" style="background: none; border: none; cursor: pointer; color: inherit; font-family: inherit; font-size: inherit; padding: 0;">Cotiza aquí</button>
-        </div>`;
+    var nextBtn = (this.state.step === 1 || this.state.step === 2) 
+      ? "" 
+      : '<button class="ceq-btn-primary" data-action="next" ' +
+        (this.canContinue() ? "" : "disabled") +
+        ">" +
+        ((this.state.step === 3 || this.state.step === 5) ? "Ver mi solución →" : "Continuar →") +
+        "</button>";
 
     footer.innerHTML = `
         <div style="width: 100%;">
@@ -743,7 +832,7 @@
                 ${back}
                 ${nextBtn}
             </div>
-            ${manualLink}
+            ${whatsappLinkHtml}
         </div>
     `;
   };
@@ -765,24 +854,58 @@
                 <form id="ceq-quote-form" class="form-wrapper">
                     <h3 class="ceq-modal-title">Recibe tu cotización</h3>
                     <p class="ceq-modal-desc">Te enviaremos un PDF formal con todos los detalles.</p>
+                    
+                    <div style="display: none !important;">
+                        <input type="text" name="website_url" tabindex="-1" autocomplete="off">
+                    </div>
+
                     <div class="ceq-form-group">
                         <label class="ceq-form-label">RUC *</label>
-                        <input type="text" name="ruc" class="ceq-form-input" required placeholder="10... / 20...">
-                        <span class="ceq-form-error" style="color: red; font-size: 12px; display: none;"></span>
+                        <input type="text" name="ruc" class="ceq-form-input" required placeholder="Ej: 20123456789" maxlength="11" autocomplete="off">
+                        <div id="error-ruc" class="error-container">
+                            <div class="error-inner">
+                                <div class="ceq-error-pill">
+                                    <div class="ceq-error-dot"></div>
+                                    <span class="message-text ceq-error-text"></span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="ceq-form-group">
                         <label class="ceq-form-label">Nombre completo *</label>
-                        <input type="text" name="nombre" class="ceq-form-input" required placeholder="Juan Pérez">
+                        <input type="text" name="nombre" class="ceq-form-input" required placeholder="Juan Pérez" autocomplete="off">
+                        <div id="error-nombre" class="error-container">
+                            <div class="error-inner">
+                                <div class="ceq-error-pill">
+                                    <div class="ceq-error-dot"></div>
+                                    <span class="message-text ceq-error-text"></span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="ceq-form-group">
                         <label class="ceq-form-label">Correo corporativo *</label>
-                        <input type="email" name="correo" class="ceq-form-input" required placeholder="juan@empresa.com">
-                        <span class="ceq-form-error" style="color: red; font-size: 12px; display: none;"></span>
+                        <input type="email" name="correo" class="ceq-form-input" required placeholder="juan@empresa.com" autocomplete="off">
+                        <div id="error-correo" class="error-container">
+                            <div class="error-inner">
+                                <div class="ceq-error-pill">
+                                    <div class="ceq-error-dot"></div>
+                                    <span class="message-text ceq-error-text"></span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="ceq-form-group">
-                        <label class="ceq-form-label">WhatsApp (Opcional)</label>
-                        <input type="tel" name="telefono" class="ceq-form-input" placeholder="+51 999 999 999">
-                        <span class="ceq-form-error" style="color: red; font-size: 12px; display: none;"></span>
+                        <label class="ceq-form-label">WhatsApp *</label>
+                        <input type="tel" name="telefono" class="ceq-form-input" required placeholder="9XXXXXXXX" maxlength="9" autocomplete="off">
+                        <div id="error-telefono" class="error-container">
+                            <div class="error-inner">
+                                <div class="ceq-error-pill">
+                                    <div class="ceq-error-dot"></div>
+                                    <span class="message-text ceq-error-text"></span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <button type="submit" class="ceq-btn-primary ceq-btn-block">
                         <span class="btn-text">Enviar cotización</span>
@@ -851,7 +974,6 @@
   CotizadorUI.prototype.canContinue = function () {
     if (this.state.step === 1) return !!this.state.processorId;
     if (this.state.step === 2) return !!this.state.gamaId;
-    // Si estamos en el paso 3 o 5, necesitamos que todo esté validado para avanzar al resumen.
     if (this.state.step === 3 || this.state.step === 5)
       return !!this.getMatchedRule() && this.getBasePrice() > 0 && !!this.state.processorId && !!this.state.gamaId;
     return true;
@@ -870,22 +992,34 @@
     };
   };
 
-
 // --- NUEVOS MÉTODOS DE VALIDACIÓN Y ENVÍO ---
 
   CotizadorUI.prototype.validateLocalFields = function (formEl) {
     var isValid = true;
     var ruc = formEl.querySelector('[name="ruc"]');
+    var nombre = formEl.querySelector('[name="nombre"]');
     var correo = formEl.querySelector('[name="correo"]');
     var telefono = formEl.querySelector('[name="telefono"]');
 
-    // Limpiar errores previos
-    formEl.querySelectorAll('.ceq-form-error').forEach(e => { e.style.display = 'none'; e.innerText = ''; });
+    // Limpiar errores primero
+    this.clearError(ruc);
+    this.clearError(nombre);
+    this.clearError(correo);
+    this.clearError(telefono);
 
-    // Validar RUC (Debe empezar con 20 y tener 11 dígitos)
+    // Validar RUC
     var rucVal = ruc.value.trim();
-    if (!/^20\d{9}$/.test(rucVal)) {
+    if (!rucVal) {
+        this.showError(ruc, "El RUC es requerido.");
+        isValid = false;
+    } else if (!/^20\d{9}$/.test(rucVal)) {
         this.showError(ruc, "El RUC debe comenzar con 20 y tener 11 dígitos numéricos.");
+        isValid = false;
+    }
+
+    // Validar Nombre
+    if(!nombre.value.trim()){
+        this.showError(nombre, "El nombre completo es requerido.");
         isValid = false;
     }
 
@@ -893,14 +1027,21 @@
     var emailVal = correo.value.trim();
     var emailDomain = emailVal.split("@")[1] || "";
     var invalidDomains = ["gmail.com", "hotmail.com", "outlook.com", "gmail.pe", "hotmail.pe", "outlook.pe", "yahoo.com"];
-    if (invalidDomains.includes(emailDomain.toLowerCase())) {
+    
+    if(!emailVal) {
+        this.showError(correo, "El correo corporativo es requerido.");
+        isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal) || invalidDomains.includes(emailDomain.toLowerCase())) {
         this.showError(correo, "Por favor, ingresa un correo corporativo válido.");
         isValid = false;
     }
 
-    // Validar Teléfono (Si se ingresó, debe empezar con 9 y tener 9 dígitos)
+    // Validar Teléfono
     var telVal = telefono.value.trim();
-    if (telVal !== "" && !/^9\d{8}$/.test(telVal)) {
+    if(!telVal){
+        this.showError(telefono, "El número de WhatsApp es requerido.");
+        isValid = false;
+    } else if (!/^9\d{8}$/.test(telVal)) {
         this.showError(telefono, "El número debe empezar con 9 y tener 9 dígitos.");
         isValid = false;
     }
@@ -909,18 +1050,35 @@
   };
 
   CotizadorUI.prototype.showError = function(inputEl, message) {
-      var errorEl = inputEl.nextElementSibling;
-      if (errorEl && errorEl.classList.contains('ceq-form-error')) {
-          errorEl.innerText = message;
-          errorEl.style.display = 'block';
+      if(!inputEl) return;
+      var errorContainer = document.getElementById('error-' + inputEl.name);
+      if (errorContainer) {
+          var errorText = errorContainer.querySelector('.message-text');
+          errorText.textContent = message;
+          
+          inputEl.classList.add('ceq-input-error', 'animate-error-shake');
+          errorContainer.classList.add('show-error');
+          
+          setTimeout(() => {
+              inputEl.classList.remove('animate-error-shake');
+          }, 400);
+      }
+  };
+
+  CotizadorUI.prototype.clearError = function(inputEl) {
+      if(!inputEl) return;
+      var errorContainer = document.getElementById('error-' + inputEl.name);
+      if (errorContainer) {
+          inputEl.classList.remove('ceq-input-error');
+          errorContainer.classList.remove('show-error');
       }
   };
 
   CotizadorUI.prototype.validateRucAPI = async function (rucValue) {
       try {
           var fd = new FormData();
-          fd.append("action", "cotizador_validar_ruc"); // El nombre de la acción WP
-          fd.append("nonce", cotizadorWP.nonce);        // El token de seguridad WP
+          fd.append("action", "cotizador_validar_ruc");
+          fd.append("nonce", cotizadorWP.nonce);
           fd.append("ruc", rucValue);
 
           var resp = await fetch(cotizadorWP.ajax_url, { 
@@ -933,17 +1091,6 @@
       } catch (e) {
           console.error("Error validando RUC", e);
           return false;
-      }
-  };
-
-  CotizadorUI.prototype.fetchCSRF = async function () {
-      // NOTA: Igual que arriba, temporalmente usamos tu ruta.
-      try {
-          var r = await fetch("/contacto/csrf_boot.php?form_id=cotizador_plugin");
-          return await r.json();
-      } catch (e) {
-          console.error("Error obteniendo CSRF", e);
-          return null;
       }
   };
 

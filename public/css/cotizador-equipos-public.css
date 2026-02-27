@@ -1065,3 +1065,16 @@
   justify-content: space-between;
   gap: 15px;
 }
+
+.wsp-option-chip-wrapper{
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.wsp-option-chip{
+  border: 1px solid #fefefe;
+  color: #fefefe;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 100px;
+}

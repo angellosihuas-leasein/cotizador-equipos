@@ -59,7 +59,7 @@ function cotizador_equipos_inyectar_variables_js() {
     // 'cotizador-equipos' es el nombre (handle) estándar que usa el boilerplate para tu JS.
     // Si en tu consola dice que 'cotizadorWP' no está definido, cambia 'cotizador-equipos' 
     // por 'cotizador-equipos-public' dependiendo de cómo esté en tu clase public.
-    wp_localize_script( 'cotizador-equipos', 'cotizadorWP', array(
+    wp_localize_script( 'cotizador-equipos-public', 'cotizadorWP', array(
         'ajax_url' => admin_url( 'admin-ajax.php' ),
         'nonce'    => wp_create_nonce( 'cotizador_nonce_action' )
     ));
