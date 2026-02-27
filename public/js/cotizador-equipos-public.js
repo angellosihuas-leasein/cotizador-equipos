@@ -42,7 +42,8 @@
       quantity: 1,
       isModalOpen: false,
       addonRamId: "", 
-      addonStorageId: ""
+      addonStorageId: "",
+      isFinished: false
     };
   }
 
@@ -122,12 +123,12 @@
       if (action === "select-processor") {
         self.state.processorId = btn.getAttribute("data-value");
         self.renderBody(); 
-        setTimeout(() => { if(self.canContinue()) self.goToStep(2); }, 400);
+        setTimeout(() => { if(self.canContinue()) self.goToStep(2); }, 250);
       }
       if (action === "select-gama") {
         self.state.gamaId = btn.getAttribute("data-value");
         self.renderBody();
-        setTimeout(() => { if(self.canContinue()) self.goToStep(3); }, 400);
+        setTimeout(() => { if(self.canContinue()) self.goToStep(3); }, 250);
       }
       
       if (action === "set-unit") {
@@ -142,7 +143,9 @@
         self.renderFooter();
       }
       if (action === "time-plus") {
-        self.state.timeValue = Math.min(999, self.state.timeValue + parseInt(btn.getAttribute("data-amount")));
+        // Límite dinámico: 3 si son semanas, 999 si son meses
+        var maxLimit = self.state.timeUnit === "semanas" ? 3 : 999;
+        self.state.timeValue = Math.min(maxLimit, self.state.timeValue + parseInt(btn.getAttribute("data-amount")));
         self.renderBody();
         self.renderFooter();
       }
@@ -309,6 +312,7 @@
         self.state.timeValue = 1;
         self.state.processorId = null;
         self.state.gamaId = null;
+        self.state.isFinished = true; // ACTIVAMOS LA BANDERA AQUÍ
         self.render();
       } else {
         self.renderModal();
@@ -327,7 +331,7 @@
       stage.classList.remove("is-leaving");
       stage.classList.add("is-entering");
       setTimeout(() => stage.classList.remove("is-entering"), 300);
-    }, 250);
+    }, 200);
   };
 
   CotizadorUI.prototype.render = function () {
@@ -426,7 +430,11 @@
     var self = this;
     var t = this.config.texts || {};
 
+    var scrollContainer = body.querySelector('.ceq-layout-left');
+    var savedScrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
+
     if (this.state.step === 0) {
+      var btnPrimaryText = this.state.isFinished ? "Volver a empezar" : (t.btn_smart || "Iniciar cotización inteligente");
       body.innerHTML = `
             <div class="ceq-welcome-wrap">
                 <div class="ceq-welcome-content">
@@ -434,7 +442,7 @@
                     <p class="ceq-subtitle ceq-welcome-subtitle">${t.welcome_subtitle || "Obtén precios al instante con nuestro cotizador digital o configura una propuesta técnica a medida."}</p>
                     <div class="ceq-welcome-actions">
                         <button class="ceq-btn-primary" data-action="start-smart">
-                            ${t.btn_smart || "Iniciar cotización inteligente"}
+                            ${btnPrimaryText}
                             <svg class="ceq-icon-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                                 <polyline points="12 5 19 12 12 19"></polyline>
@@ -572,10 +580,11 @@
       var boxOneEyebrow = this.state.step === 5 ? "Configura tu equipo" : "Esta es la mejor opción para tu operación";
 
       body.innerHTML = `
+      ${scrollBtn}
         <div class="ceq-layout-split">
             <div class="ceq-layout-left">
+            
                 <div class="ceq-box ceq-box-base" style="text-align: center;">
-                    ${scrollBtn}
                     <div class="ceq-box-eyebrow">${boxOneEyebrow}</div>
                     ${boxOneContent}
                 </div>
@@ -612,6 +621,23 @@
                         </div>
                     </div>
                 </div>
+
+
+              <div class="ceq-layout-right mobile-layout">
+                  <div class="ceq-right-card">
+                      <div class="ceq-circle">
+                          <span class="ceq-circle-lbl">CUOTA MENSUAL</span>
+                          <span class="ceq-circle-val">${this.config.currency_symbol}${Math.round(tPricePerPeriod)}</span>
+                          <span class="ceq-circle-sub">${this.config.currency_symbol}${Math.round(pBase)} x ${this.state.quantity} ${qtyLabel}</span>
+                      </div>
+                      <div class="ceq-info-card">
+                          <span class="ceq-info-label">SISTEMA OPERATIVO</span>
+                          <span class="ceq-info-title">Viene con <br> <strong>Windows Pro</strong></span>
+                          <span class="ceq-info-footer">Precios no incluyen IGV.</span>
+                      </div>
+                  </div>
+              </div>
+
             </div>
             <div class="ceq-layout-right">
                 <div class="ceq-right-card">
@@ -628,6 +654,16 @@
                 </div>
             </div>
         </div>`;
+
+        if (savedScrollTop > 0) {
+            // Usamos setTimeout en 0 para darle 1 milisegundo al navegador de pintar el DOM nuevo
+            setTimeout(function() {
+                var newScrollContainer = body.querySelector('.ceq-layout-left');
+                if (newScrollContainer) {
+                    newScrollContainer.scrollTop = savedScrollTop;
+                }
+            }, 0);
+        }
       return;
     }
 
@@ -654,19 +690,19 @@
                     <div class="ceq-feat-icon">
                       <img src="${typeof cotizadorData !== 'undefined' ? cotizadorData.pluginUrl : ''}img/servicio.svg" alt="Especialista" class="ceq-step4-features-img" />
                     </div>
-                    <p>Soporte técnico y<br>mantenimiento incluido</p>
+                    <p>Soporte técnico<br> incluido</p>
                 </div>
                 <div class="ceq-feat-item">
                     <div class="ceq-feat-icon">
                       <img src="${typeof cotizadorData !== 'undefined' ? cotizadorData.pluginUrl : ''}img/portatil.svg" alt="Especialista" class="ceq-step4-features-img" />
                     </div>
-                    <p>Laptop de reemplazo<br>inmediata por fallas</p>
+                    <p>Cambios tus <br>laptops si fallan</p>
                 </div>
                 <div class="ceq-feat-item">
                     <div class="ceq-feat-icon">
                       <img src="${typeof cotizadorData !== 'undefined' ? cotizadorData.pluginUrl : ''}img/camion.svg" alt="Especialista" class="ceq-step4-features-img" />
                     </div>
-                    <p>Configuración y entrega<br>en tus oficinas</p>
+                    <p>Recibe las laptops <br>en tu oficina</p>
                 </div>
             </div>
         </div>`;
@@ -696,7 +732,7 @@
         <div class="ceq-s4-footer-wrap">
             <div class="ceq-s4-actions">
                 <button class="ceq-btn-ghost-dark" data-action="back">← Volver</button>
-                <button class="ceq-btn-primary ceq-s4-btn" data-action="open-modal">Quiero la cotización en mi correo →</button>
+                <button class="ceq-btn-primary ceq-s4-btn" data-action="open-modal">Quiero la cotización en mi correo</button>
             </div>
             ${whatsappLinkHtml}
         </div>

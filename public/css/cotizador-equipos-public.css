@@ -94,9 +94,9 @@
 }
 
 .ce-cotizador .ceq-title {
-  font-size: 42px;
-  font-weight: 800;
-  color: #111827;
+  font-size: 36px;
+  font-weight: 600;
+  color: #000000;
   margin: 0 0 16px;
 }
 
@@ -159,7 +159,7 @@
 .ce-cotizador .ceq-wa-title {
   font-size: 18px;
   font-weight: 700;
-  color: #111827;
+  color: #000;
   margin-bottom: 2px;
 }
 
@@ -757,7 +757,7 @@
   }
 
   .ce-cotizador .ceq-title {
-    font-size: 28px;
+    font-size: 26px;
   }
 
   .ce-cotizador .ceq-option {
@@ -767,10 +767,6 @@
   .ce-cotizador .ceq-footer {
     flex-direction: column-reverse;
     gap: 20px;
-  }
-
-  .ce-cotizador .ceq-btn-primary {
-    width: 100%;
   }
 }
 
@@ -954,6 +950,7 @@
 
   .ce-cotizador .ceq-welcome-title {
     font-size: 32px;
+    line-height: 38px;
   }
 
   .ce-cotizador .ceq-welcome-subtitle {
@@ -967,7 +964,6 @@
   }
 
   .ce-cotizador .ceq-welcome-actions button {
-    width: 100%;
     justify-content: center;
   }
 
@@ -1073,7 +1069,7 @@
 .ceq-step4-container {
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 10px;
   padding: 20px 0;
 }
 
@@ -1134,12 +1130,10 @@
 .ceq-s4-disc {
   font-size: 11px;
   color: #404040;
-  margin-top: 15px;
+  margin-top: 5px;
 }
 
 .ceq-step4-images {
-  right: 0;
-  top: 50%;
   transform: translateX(-20px);
   height: 100%;
   display: flex;
@@ -1197,7 +1191,7 @@
 .ceq-btn-ghost-dark {
   background: #fff0;
   border: none;
-  color: #6b7280;
+  color: #666666;
   font-weight: 600;
   cursor: pointer;
   font-size: 16px;
@@ -1425,6 +1419,16 @@
 .ce-cotizador-wrapper.step-5 .ceq-layout-left > div:nth-child(3) {
   order: 1;
 }
+.ce-cotizador-wrapper.step-5 .ceq-body {
+  position: relative;
+}
+.ce-cotizador-wrapper.step-5 .ceq-box-base-wrapper {
+  flex-direction: column;
+  margin-top: 10px;
+}
+.ce-cotizador-wrapper.step-5 .ceq-box-base-wrapper > div {
+  width: 100% !important;
+}
 
 .ce-cotizador-wrapper.step-3 .ceq-box:first-child .ceq-box-title {
   font-size: 20px;
@@ -1435,9 +1439,8 @@
 
 .ceq-scroll-arrow {
   position: absolute;
-  left: -20px;
-  top: 50%;
-  transform: translateY(-50%);
+  left: -45px;
+  bottom: 0;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 50%;
@@ -1450,13 +1453,16 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   z-index: 10;
-  transition: all 0.2s ease;
+  transition: 0.3s ease all;
 }
 
-.ceq-scroll-arrow:hover {
+.ceq-scroll-arrow:hover,
+.ceq-scroll-arrow:focus,
+.ceq-scroll-arrow:focus-visible,
+.ceq-scroll-arrow:active {
   background: #fff7ed;
   color: #ea580c;
-  transform: translateY(-50%) scale(1.1);
+  scale: 1.1;
 }
 
 @media (max-width: 768px) {
@@ -1464,5 +1470,100 @@
     left: 10px;
     top: 15px;
     transform: none;
+  }
+}
+
+/* OCULTAR COSAS DEBAJO */
+.ceq-scroll-arrow {
+  display: none !important;
+}
+
+.ceq-layout-right.mobile-layout {
+  display: none;
+}
+
+.ceq-btn-primary svg {
+  width: 20px;
+}
+@media (max-width: 767px) {
+  .ceq-welcome-visual {
+    display: none !important;
+  }
+  .ce-cotizador .ceq-welcome-subtitle {
+    font-size: 16px !important;
+  }
+  .ce-cotizador .ceq-opt-desc,
+  .ce-cotizador .ceq-wa-desc {
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .ce-cotizador .ceq-opt-title,
+  .ce-cotizador .ceq-wa-title {
+    font-size: 14px;
+    line-height: 18px;
+  }
+  .ceq-info-card {
+    max-width: 100%;
+  }
+  .ceq-step4-top {
+    flex-direction: column;
+  }
+  .ceq-step4-price-circle,
+  .ceq-step4-images {
+    transform: inherit;
+  }
+  .ceq-step4-images img {
+    max-width: 75% !important;
+  }
+  .ceq-feat-item p {
+    font-size: 10px;
+  }
+  .ceq-feat-item {
+    padding: 0px;
+  }
+  .ceq-step4-features {
+    gap: 10px;
+    padding: 20px 10px;
+  }
+  .ceq-step4-images {
+    justify-content: center !important;
+    margin-top: -40px;
+  }
+  .ceq-layout-right {
+    display: none !important;
+  }
+  .ceq-layout-right.mobile-layout {
+    display: block !important;
+    order: 5;
+  }
+  .ceq-step4-container{
+    padding: 0;
+  }
+  .ceq-step4-price-circle{
+    width: 220px;
+    height: 220px;
+  }
+  .ceq-s4-price{
+    font-size: 42px;
+    font-weight: 700 !important;
+  }
+  .ceq-step4-top{
+    padding-top: 0px;
+    padding-bottom: 0px;
+  }
+  .ceq-s4-lbl{
+    font-size: 12px;
+  }
+  .ceq-s4-specs{
+    font-size: 18px !important;
+  }
+  .ceq-btn-ghost-dark{
+    font-size: 14px !important;
+  }
+  .ce-cotizador .ceq-btn-primary{
+    padding: 13px 15px !important;
+  }
+  .ceq-layout-left{
+    max-height: 380px !important;
   }
 }

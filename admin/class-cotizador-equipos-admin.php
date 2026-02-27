@@ -26,7 +26,7 @@ class Cotizador_Equipos_Admin {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/partials/cotizador-equipos-admin-display.php';
 	}
 
-	xpublic function enqueue_scripts( $hook_suffix ) {
+	public function enqueue_scripts( $hook_suffix ) {
 		if ( 'toplevel_page_' . $this->plugin_name !== $hook_suffix ) {
 			return;
 		}
