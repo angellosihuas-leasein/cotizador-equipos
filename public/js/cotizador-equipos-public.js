@@ -263,6 +263,9 @@
             formData.append('tiempo_valor', self.state.timeValue);
             formData.append('tiempo_unidad', self.state.timeUnit);
 
+            formData.append('addon_ram_id', self.state.addonRamId);
+            formData.append('addon_storage_id', self.state.addonStorageId);
+
             var resp = await fetch(cotizadorWP.ajax_url, {
                 method: "POST",
                 body: formData
