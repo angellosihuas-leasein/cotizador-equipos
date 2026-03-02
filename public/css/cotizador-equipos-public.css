@@ -278,7 +278,7 @@
   margin-bottom: 12px;
 }
 
-.ce-cotizador .ceq-box:last-child {
+.ce-cotizador .ceq-box:nth-child(3) {
   margin-bottom: 0px;
 }
 
@@ -1565,5 +1565,12 @@
   }
   .ceq-layout-left{
     max-height: 380px !important;
+  }
+
+  .ce-cotizador .ceq-box:nth-child(3) {
+    margin-bottom: 12px;
+  }
+  .ce-cotizador .ceq-circle{
+    margin: 0 auto 15px;
   }
 }
