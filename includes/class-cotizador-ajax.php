@@ -113,19 +113,31 @@ class Cotizador_Ajax {
         $texto_adicionales = "";
         if (!empty($addon_ram_id) || !empty($addon_storage_id)) {
             $texto_adicionales .= "\n\n=== ADICIONALES SELECCIONADOS ===";
+            
+            // Procesamiento de RAM adicional
             if (!empty($addon_ram_id) && !empty($settings['addons']['ram'])) {
                 foreach ($settings['addons']['ram'] as $ram) {
                     if ($ram['id'] === $addon_ram_id) {
                         $p_unit_price += floatval($ram['price']);
                         $texto_adicionales .= "\n- RAM Extra: " . $ram['label'] . " (+S/." . $ram['price'] . ")";
+                        
+                        // Modificar RAM string e intentar sumar a Odoo
+                        $p_ram_str = "16GB Base + " . $ram['label'] . " Adicional";
+                        preg_match('/\d+/', $ram['label'], $matches);
+                        $p_ram_odoo = 16 + (isset($matches[0]) ? intval($matches[0]) : 0);
                     }
                 }
             }
+            
+            // Procesamiento de Almacenamiento adicional
             if (!empty($addon_storage_id) && !empty($settings['addons']['storage'])) {
                 foreach ($settings['addons']['storage'] as $sto) {
                     if ($sto['id'] === $addon_storage_id) {
                         $p_unit_price += floatval($sto['price']);
                         $texto_adicionales .= "\n- Almacenamiento Extra: " . $sto['label'] . " (+S/." . $sto['price'] . ")";
+                        
+                        // Modificar Storage string
+                        $p_almacenamiento = "Sólido 512GB Base + " . $sto['label'] . " Adicional";
                     }
                 }
             }
@@ -144,9 +156,6 @@ class Cotizador_Ajax {
         $p_empleados = '1-10 empleados';
         $p_rol = 'No especificado';
         $p_so = 'windows';
-        $p_ram_str = '16GB';
-        $p_ram_odoo = 16;
-        $p_almacenamiento = 'Sólido 512GB';
         $p_fuente = 'cotizador_web';
         $hasta12 = 1;
         $masde12 = 0;
@@ -160,7 +169,10 @@ class Cotizador_Ajax {
         $asesores_esta_web = ['Josselyn Cochachin'];
         $asesor_data = $mydb->get_results("SELECT id, nombre, correo, firma, cargo, odoo_user_id, odoo_partner_id, telefono FROM asesores", ARRAY_A);
         if($asesor_data) { $asesor_data = array_filter($asesor_data, function($item) use ($asesores_esta_web) { return in_array($item['nombre'], $asesores_esta_web); }); }
-        $asesor = !empty($asesor_data) ? reset($asesor_data) : ['id' => 1, 'nombre' => 'Josselyn Cochachin', 'odoo_user_id' => 1, 'telefono' => '51987146591'];
+        // $asesor = !empty($asesor_data) ? reset($asesor_data) : ['id' => 1, 'nombre' => 'Josselyn Cochachin', 'odoo_user_id' => 1, 'telefono' => '51987146591'];
+        $asesor = !empty($asesor_data) ? reset($asesor_data) : ['id' => 1, 'nombre' => 'Josselyn Cochachin', 'odoo_user_id' => 1, 'telefono' => '51901547663'];
+
+
 
         $sql = $mydb->prepare("INSERT INTO leads VALUES (
             DEFAULT, %s, %s, %s, NULL, %s, %s, %s, %s, %d, %d, %s, NULL, NULL, %s, %s, %s, NULL, NULL, %f, '0', %s, NULL, %s, NOW(), NULL, '1', '1', '0', '0', '', '', '', '', ''

@@ -144,7 +144,7 @@
       }
       if (action === "time-plus") {
         // Límite dinámico: 3 si son semanas, 999 si son meses
-        var maxLimit = self.state.timeUnit === "semanas" ? 3 : 999;
+        var maxLimit = self.state.timeUnit === "semanas" ? 3 : 36;
         self.state.timeValue = Math.min(maxLimit, self.state.timeValue + parseInt(btn.getAttribute("data-amount")));
         self.renderBody();
         self.renderFooter();
@@ -266,17 +266,13 @@
             formData.append('addon_ram_id', self.state.addonRamId);
             formData.append('addon_storage_id', self.state.addonStorageId);
 
-            var resp = await fetch(cotizadorWP.ajax_url, {
+            fetch(cotizadorWP.ajax_url, {
                 method: "POST",
                 body: formData
-            });
+            }).then(resp => resp.json())
+              .catch(err => console.error("Proceso en segundo plano:", err));
 
-            var jsonResp = await resp.json();
-
-            if (!jsonResp.success) {
-                throw new Error(jsonResp.data.message || "Error en el envío");
-            }
-
+            // ¡Lanzamos la animación de éxito al INSTANTE!
             formEl.classList.add("form-animate-out");
             successEl.classList.add("success-animate-in"); 
 
@@ -887,14 +883,15 @@
     return match;
   };
 
-CotizadorUI.prototype.getBasePrice = function () {
+  CotizadorUI.prototype.getBasePrice = function () {
     var rule = this.getMatchedRule();
     if (!rule || !this.state.processorId || !this.state.gamaId) return 0;
     var raw = this.config.prices[this.state.processorId]?.[this.state.gamaId]?.[rule.id];
     var base = raw ? parseFloat(raw) : 0;
 
-    // NUEVO: Sumar adicionales sólo si es paso 5 (manual)
-    if (this.state.step === 5) {
+    // CORRECCIÓN: Sumar adicionales evaluando el "modo" y no el "paso".
+    // Así el precio extra se mantiene también en el Paso 4 (Resumen final).
+    if (this.state.mode === "manual") {
       if (this.state.addonRamId && this.config.addons?.ram) {
         var ram = this.config.addons.ram.find(a => a.id === this.state.addonRamId);
         if (ram) base += parseFloat(ram.price || 0);
