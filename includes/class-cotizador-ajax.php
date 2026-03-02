@@ -109,8 +109,22 @@ class Cotizador_Ajax {
             $p_unit_price = floatval($settings['prices'][$procesador_id][$gama_id][$matched_period_id]);
         }
 
-        // 3. Armar el texto para la pestaña "NOTAS" y sumar el costo de adicionales
+        // Buscar el periodo correspondiente para los adicionales
+        $matched_addon_period_id = '';
+        if (!empty($settings['addon_periods'])) {
+            foreach ($settings['addon_periods'] as $p) {
+                if ($p['unit'] === $p_tiempo && $p_duracion >= $p['min_value'] && ($p['max_value'] === '' || $p_duracion <= intval($p['max_value']))) {
+                    $matched_addon_period_id = $p['id']; break;
+                }
+            }
+        }
+
+        // 3. Armar el texto para la pestaña "NOTAS" y sumar el costo y capacidad de adicionales
         $texto_adicionales = "";
+        
+        $total_ram = 16; // RAM Base
+        $total_storage_gb = 512; // Almacenamiento Base GB
+
         if (!empty($addon_ram_id) || !empty($addon_storage_id)) {
             $texto_adicionales .= "\n\n=== ADICIONALES SELECCIONADOS ===";
             
@@ -118,13 +132,14 @@ class Cotizador_Ajax {
             if (!empty($addon_ram_id) && !empty($settings['addons']['ram'])) {
                 foreach ($settings['addons']['ram'] as $ram) {
                     if ($ram['id'] === $addon_ram_id) {
-                        $p_unit_price += floatval($ram['price']);
-                        $texto_adicionales .= "\n- RAM Extra: " . $ram['label'] . " (+S/." . $ram['price'] . ")";
+                        $r_price = isset($ram['prices'][$matched_addon_period_id]) ? floatval($ram['prices'][$matched_addon_period_id]) : (isset($ram['price']) ? floatval($ram['price']) : 0);
+                        $p_unit_price += $r_price;
+                        $texto_adicionales .= "\n- RAM Extra: " . $ram['label'] . " (+S/." . $r_price . ")";
                         
-                        // Modificar RAM string e intentar sumar a Odoo
-                        $p_ram_str = "16GB Base + " . $ram['label'] . " Adicional";
-                        preg_match('/\d+/', $ram['label'], $matches);
-                        $p_ram_odoo = 16 + (isset($matches[0]) ? intval($matches[0]) : 0);
+                        // Extraer números y sumar RAM
+                        preg_match('/(\d+)/', $ram['label'], $matches);
+                        $extra_ram = isset($matches[1]) ? intval($matches[1]) : 0;
+                        $total_ram += $extra_ram;
                     }
                 }
             }
@@ -133,14 +148,33 @@ class Cotizador_Ajax {
             if (!empty($addon_storage_id) && !empty($settings['addons']['storage'])) {
                 foreach ($settings['addons']['storage'] as $sto) {
                     if ($sto['id'] === $addon_storage_id) {
-                        $p_unit_price += floatval($sto['price']);
-                        $texto_adicionales .= "\n- Almacenamiento Extra: " . $sto['label'] . " (+S/." . $sto['price'] . ")";
+                        $s_price = isset($sto['prices'][$matched_addon_period_id]) ? floatval($sto['prices'][$matched_addon_period_id]) : (isset($sto['price']) ? floatval($sto['price']) : 0);
+                        $p_unit_price += $s_price;
+                        $texto_adicionales .= "\n- Almacenamiento Extra: " . $sto['label'] . " (+S/." . $s_price . ")";
                         
-                        // Modificar Storage string
-                        $p_almacenamiento = "Sólido 512GB Base + " . $sto['label'] . " Adicional";
+                        // Extraer números y tipo de unidad (GB o TB) para sumar
+                        preg_match('/(\d+)\s*(GB|TB)/i', $sto['label'], $matches);
+                        $extra_sto = isset($matches[1]) ? intval($matches[1]) : 0;
+                        $unit = isset($matches[2]) ? strtoupper($matches[2]) : '';
+                        if ($unit === 'TB') {
+                            $extra_sto *= 1024; // Convertir TB a GB
+                        }
+                        $total_storage_gb += $extra_sto;
                     }
                 }
             }
+        }
+
+        // Formatear los strings que viajan a base de datos y Odoo
+        $p_ram_str = "{$total_ram}GB RAM";
+        $p_ram_odoo = $total_ram; 
+
+        if ($total_storage_gb >= 1024) {
+            $tb = $total_storage_gb / 1024;
+            $formatted_tb = (floor($tb) == $tb) ? $tb : number_format($tb, 1, '.', '');
+            $p_almacenamiento = "Sólido {$formatted_tb}TB";
+        } else {
+            $p_almacenamiento = "Sólido {$total_storage_gb}GB";
         }
 
         $proc_label = 'Laptop Estándar';
@@ -171,8 +205,6 @@ class Cotizador_Ajax {
         if($asesor_data) { $asesor_data = array_filter($asesor_data, function($item) use ($asesores_esta_web) { return in_array($item['nombre'], $asesores_esta_web); }); }
         // $asesor = !empty($asesor_data) ? reset($asesor_data) : ['id' => 1, 'nombre' => 'Josselyn Cochachin', 'odoo_user_id' => 1, 'telefono' => '51987146591'];
         $asesor = !empty($asesor_data) ? reset($asesor_data) : ['id' => 1, 'nombre' => 'Josselyn Cochachin', 'odoo_user_id' => 1, 'telefono' => '51901547663'];
-
-
 
         $sql = $mydb->prepare("INSERT INTO leads VALUES (
             DEFAULT, %s, %s, %s, NULL, %s, %s, %s, %s, %d, %d, %s, NULL, NULL, %s, %s, %s, NULL, NULL, %f, '0', %s, NULL, %s, NOW(), NULL, '1', '1', '0', '0', '', '', '', '', ''

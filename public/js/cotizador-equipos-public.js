@@ -542,10 +542,10 @@
       }).join('');
 
       var ramOptions = '<option value="">Base (16GB RAM)</option>' + (this.config.addons?.ram || []).map(function(r) {
-          return '<option value="' + r.id + '" ' + (r.id === self.state.addonRamId ? 'selected' : '') + '>' + r.label + ' (+'+self.config.currency_symbol+r.price+')</option>';
+          return '<option value="' + r.id + '" ' + (r.id === self.state.addonRamId ? 'selected' : '') + '>' + r.label + '</option>';
       }).join('');
       var stoOptions = '<option value="">Base (512GB SSD)</option>' + (this.config.addons?.storage || []).map(function(s) {
-          return '<option value="' + s.id + '" ' + (s.id === self.state.addonStorageId ? 'selected' : '') + '>' + s.label + ' (+'+self.config.currency_symbol+s.price+')</option>';
+          return '<option value="' + s.id + '" ' + (s.id === self.state.addonStorageId ? 'selected' : '') + '>' + s.label + '</option>';
       }).join('');
 
 
@@ -868,11 +868,12 @@
       `;
   };
 
-  CotizadorUI.prototype.getMatchedRule = function () {
+  CotizadorUI.prototype.getMatchedAddonRule = function () {
     var v = this.state.timeValue,
       u = this.state.timeUnit,
       match = null;
-    this.config.periods.forEach((p) => {
+    if (!this.config.addon_periods) return null;
+    this.config.addon_periods.forEach((p) => {
       if (
         p.unit === u &&
         v >= p.min_value &&
@@ -889,16 +890,22 @@
     var raw = this.config.prices[this.state.processorId]?.[this.state.gamaId]?.[rule.id];
     var base = raw ? parseFloat(raw) : 0;
 
-    // CORRECCIÓN: Sumar adicionales evaluando el "modo" y no el "paso".
-    // Así el precio extra se mantiene también en el Paso 4 (Resumen final).
     if (this.state.mode === "manual") {
+      var addonRule = this.getMatchedAddonRule();
+      
       if (this.state.addonRamId && this.config.addons?.ram) {
         var ram = this.config.addons.ram.find(a => a.id === this.state.addonRamId);
-        if (ram) base += parseFloat(ram.price || 0);
+        if (ram) {
+            var rPrice = (addonRule && ram.prices && ram.prices[addonRule.id] !== undefined) ? ram.prices[addonRule.id] : (ram.price || 0);
+            base += parseFloat(rPrice);
+        }
       }
       if (this.state.addonStorageId && this.config.addons?.storage) {
         var sto = this.config.addons.storage.find(a => a.id === this.state.addonStorageId);
-        if (sto) base += parseFloat(sto.price || 0);
+        if (sto) {
+            var sPrice = (addonRule && sto.prices && sto.prices[addonRule.id] !== undefined) ? sto.prices[addonRule.id] : (sto.price || 0);
+            base += parseFloat(sPrice);
+        }
       }
     }
     return base;

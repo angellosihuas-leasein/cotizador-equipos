@@ -65,6 +65,9 @@ class Cotizador_Equipos_Settings {
 				array( 'id' => 'semanas_2_4', 'label' => '2 a 4 semanas', 'front_label' => '2 a 4 semanas', 'description' => 'Plan temporal extendido por semanas.', 'unit' => 'semanas', 'min_value' => 2, 'max_value' => 4 ),
 				array( 'id' => 'meses_1_12', 'label' => '1 a 12 meses', 'front_label' => '1 a 12 meses', 'description' => 'Plan mensual para contratos estables.', 'unit' => 'meses', 'min_value' => 1, 'max_value' => 12 ),
 			),
+			'addon_periods'   => array(
+				array( 'id' => 'addon_meses_1_12', 'label' => '1 a 12 meses', 'unit' => 'meses', 'min_value' => 1, 'max_value' => 12 ),
+			),
 			'addons'          => array(
 				'ram'     => array(),
 				'storage' => array(),
@@ -94,6 +97,8 @@ class Cotizador_Equipos_Settings {
 		$settings['processors'] = self::sanitize_options_list( isset( $raw['processors'] ) ? $raw['processors'] : array(), 'proc', $defaults['processors'] );
 		$settings['gamas'] = self::sanitize_options_list( isset( $raw['gamas'] ) ? $raw['gamas'] : array(), 'gama', $defaults['gamas'] );
 		$settings['periods'] = self::sanitize_periods( isset( $raw['periods'] ) ? $raw['periods'] : array(), 'periodo', $defaults['periods'] );
+		
+		$settings['addon_periods'] = self::sanitize_periods( isset( $raw['addon_periods'] ) ? $raw['addon_periods'] : array(), 'addon_periodo', $defaults['addon_periods'] );
 		
 		$settings['addons'] = array(
 			'ram'     => self::sanitize_addons( isset( $raw['addons']['ram'] ) ? $raw['addons']['ram'] : array() ),
@@ -246,10 +251,22 @@ class Cotizador_Equipos_Settings {
 			foreach ( $items_raw as $item ) {
 				$label = isset( $item['label'] ) ? sanitize_text_field( wp_unslash( $item['label'] ) ) : '';
 				if ( '' === $label ) continue;
+				
+                // NUEVO: Sanitizar array de precios en vez de un solo "price"
+                $prices = array();
+                if ( isset( $item['prices'] ) && is_array( $item['prices'] ) ) {
+                    foreach ( $item['prices'] as $pid => $pval ) {
+                        $prices[ sanitize_key( $pid ) ] = max( 0, (float) $pval );
+                    }
+                } elseif ( isset( $item['price'] ) ) {
+                    // Compatibilidad por si hay datos viejos
+                    $prices['default'] = floatval($item['price']);
+                }
+
 				$cleaned[] = array(
-					'id'    => isset( $item['id'] ) ? sanitize_key( $item['id'] ) : 'add_' . time(),
-					'label' => $label,
-					'price' => isset( $item['price'] ) ? floatval( $item['price'] ) : 0,
+					'id'     => isset( $item['id'] ) ? sanitize_key( $item['id'] ) : 'add_' . time(),
+					'label'  => $label,
+					'prices' => $prices,
 				);
 			}
 		}

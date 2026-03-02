@@ -116,29 +116,80 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 				</div>
 
 				<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-					<h2 class="text-lg font-semibold border-b border-slate-100 pb-3 mb-5 text-slate-800 m-0">Adicionales: Paso 5 (Sólo Modo Manual)</h2>
+					<div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-5">
+						<h2 class="text-lg font-semibold text-slate-800 m-0">Adicionales: Paso 5 (Sólo Modo Manual)</h2>
+					</div>
+					
+					<div class="mb-6">
+						<h3 class="text-sm font-bold text-slate-600 uppercase mb-3">1. Reglas de Periodos para Adicionales</h3>
+						<div class="overflow-x-auto border border-slate-200 rounded-lg">
+							<table class="w-full text-sm text-left border-collapse bg-white">
+								<thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
+									<tr>
+										<th class="py-2 px-4 font-semibold">Unidad</th>
+										<th class="py-2 px-4 font-semibold">Mínimo</th>
+										<th class="py-2 px-4 font-semibold">Máximo</th>
+										<th class="py-2 px-4 font-semibold">ID / Etiqueta</th>
+										<th class="py-2 px-4 font-semibold text-center">Acción</th>
+									</tr>
+								</thead>
+								<tbody class="divide-y divide-slate-100">
+									<template x-for="(periodo, index) in formData.addon_periods" :key="periodo.id">
+										<tr class="hover:bg-slate-50">
+											<td class="py-2 px-4"><select x-model="periodo.unit" class="border border-slate-300 rounded p-1.5"><option value="semanas">Semanas</option><option value="meses">Meses</option></select></td>
+											<td class="py-2 px-4"><input type="number" min="1" x-model="periodo.min_value" class="w-16 border border-slate-300 rounded p-1.5 text-center"></td>
+											<td class="py-2 px-4"><input type="number" min="1" x-model="periodo.max_value" class="w-16 border border-slate-300 rounded p-1.5 text-center" placeholder="∞"></td>
+											<td class="py-2 px-4"><input type="text" x-model="periodo.label" class="w-full border border-slate-300 rounded p-1.5" placeholder="Ej: 1 a 3 meses"></td>
+											<td class="py-2 px-4 text-center"><button type="button" @click="removeItem('addon_periods', index)" class="text-red-500 hover:text-red-700 bg-transparent border-none cursor-pointer">X</button></td>
+										</tr>
+									</template>
+								</tbody>
+							</table>
+						</div>
+						<button type="button" @click="addItem('addon_periods')" class="mt-2 text-xs font-semibold text-orange-600 bg-transparent border-none cursor-pointer hover:underline">+ Añadir Regla de Adicionales</button>
+					</div>
+
+					<h3 class="text-sm font-bold text-slate-600 uppercase mb-3">2. Opciones y Precios por Periodo</h3>
 					<div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
 						<div class="p-4 border border-slate-200 rounded-lg bg-slate-50">
 							<h3 class="text-sm font-bold text-slate-600 uppercase mb-3">Ampliación de RAM</h3>
 							<template x-for="(addon, index) in formData.addons.ram" :key="addon.id">
-								<div class="flex gap-2 mb-2 items-center">
-									<input type="text" x-model="addon.label" placeholder="Ej: 32GB RAM" class="flex-1 font-medium border border-slate-200 rounded p-2 text-sm outline-none focus:border-orange-500">
-									<input type="number" step="0.01" x-model="addon.price" placeholder="Precio S/." class="w-24 border border-slate-200 rounded p-2 text-sm text-center outline-none focus:border-orange-500">
-									<button type="button" @click="formData.addons.ram.splice(index, 1)" class="text-red-500 hover:text-red-700 bg-transparent border-none cursor-pointer p-1 font-bold">X</button>
+								<div class="mb-4 bg-white p-3 border border-slate-200 rounded">
+									<div class="flex gap-2 mb-2 items-center">
+										<input type="text" x-model="addon.label" placeholder="Ej: 32GB RAM" class="flex-1 font-medium border border-slate-200 rounded p-2 text-sm outline-none">
+										<button type="button" @click="formData.addons.ram.splice(index, 1)" class="text-red-500 bg-transparent border-none cursor-pointer p-1 font-bold">X</button>
+									</div>
+									<div class="grid grid-cols-2 gap-2 mt-2">
+										<template x-for="per in formData.addon_periods" :key="'ram-'+addon.id+'-'+per.id">
+											<div>
+												<label class="block text-[10px] text-slate-500 font-bold mb-1" x-text="per.label"></label>
+												<input type="number" step="0.01" x-model="addon.prices[per.id]" placeholder="Precio S/." class="w-full border border-slate-200 rounded p-1.5 text-sm text-center">
+											</div>
+										</template>
+									</div>
 								</div>
 							</template>
-							<button type="button" @click="formData.addons.ram.push({id: 'ram_'+Date.now(), label: '', price: 0})" class="mt-2 text-xs font-semibold text-orange-600 bg-transparent border-none cursor-pointer hover:underline">+ Añadir opción de RAM</button>
+							<button type="button" @click="formData.addons.ram.push({id: 'ram_'+Date.now(), label: '', prices: {}})" class="mt-2 text-xs font-semibold text-orange-600 bg-transparent border-none cursor-pointer hover:underline">+ Añadir opción de RAM</button>
 						</div>
 						<div class="p-4 border border-slate-200 rounded-lg bg-slate-50">
 							<h3 class="text-sm font-bold text-slate-600 uppercase mb-3">Ampliación de Almacenamiento</h3>
 							<template x-for="(addon, index) in formData.addons.storage" :key="addon.id">
-								<div class="flex gap-2 mb-2 items-center">
-									<input type="text" x-model="addon.label" placeholder="Ej: 1TB SSD" class="flex-1 font-medium border border-slate-200 rounded p-2 text-sm outline-none focus:border-orange-500">
-									<input type="number" step="0.01" x-model="addon.price" placeholder="Precio S/." class="w-24 border border-slate-200 rounded p-2 text-sm text-center outline-none focus:border-orange-500">
-									<button type="button" @click="formData.addons.storage.splice(index, 1)" class="text-red-500 hover:text-red-700 bg-transparent border-none cursor-pointer p-1 font-bold">X</button>
+								<div class="mb-4 bg-white p-3 border border-slate-200 rounded">
+									<div class="flex gap-2 mb-2 items-center">
+										<input type="text" x-model="addon.label" placeholder="Ej: 1TB SSD" class="flex-1 font-medium border border-slate-200 rounded p-2 text-sm outline-none">
+										<button type="button" @click="formData.addons.storage.splice(index, 1)" class="text-red-500 bg-transparent border-none cursor-pointer p-1 font-bold">X</button>
+									</div>
+									<div class="grid grid-cols-2 gap-2 mt-2">
+										<template x-for="per in formData.addon_periods" :key="'sto-'+addon.id+'-'+per.id">
+											<div>
+												<label class="block text-[10px] text-slate-500 font-bold mb-1" x-text="per.label"></label>
+												<input type="number" step="0.01" x-model="addon.prices[per.id]" placeholder="Precio S/." class="w-full border border-slate-200 rounded p-1.5 text-sm text-center">
+											</div>
+										</template>
+									</div>
 								</div>
 							</template>
-							<button type="button" @click="formData.addons.storage.push({id: 'sto_'+Date.now(), label: '', price: 0})" class="mt-2 text-xs font-semibold text-orange-600 bg-transparent border-none cursor-pointer hover:underline">+ Añadir opción de Almacenamiento</button>
+							<button type="button" @click="formData.addons.storage.push({id: 'sto_'+Date.now(), label: '', prices: {}})" class="mt-2 text-xs font-semibold text-orange-600 bg-transparent border-none cursor-pointer hover:underline">+ Añadir opción de Almacenamiento</button>
 						</div>
 					</div>
 				</div>
@@ -268,126 +319,141 @@ if ( ! $settings_json ) { $settings_json = '{}'; }
 </div>
 
 <script>
-	document.addEventListener('alpine:init', () => {
-		Alpine.data('cotizadorUI', () => ({
-			tab: 'configuracion',
-			initialSettings: <?php echo $settings_json; ?>,
-			simboloDivisa: 'S/.',
-			formData: { currency_code: 'PEN', currency_symbol: 'S/.', texts: {}, processors: [], gamas: [], periods: [], combinations: {}, prices: {} },
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('cotizadorUI', () => ({
+            tab: 'configuracion',
+            initialSettings: <?php echo $settings_json; ?>,
+            simboloDivisa: 'S/.',
+            // NUEVO: Agregamos addon_periods y addons a la estructura inicial
+            formData: { currency_code: 'PEN', currency_symbol: 'S/.', texts: {}, processors: [], gamas: [], periods: [], addon_periods: [], addons: { ram: [], storage: [] }, combinations: {}, prices: {} },
 
-			init() {
-				const incoming = this.initialSettings && typeof this.initialSettings === 'object' ? this.initialSettings : {};
-				this.formData.currency_code = incoming.currency_code || 'PEN';
-				this.formData.texts = incoming.texts || {};
-				this.formData.processors = this.normalizeItems(incoming.processors, 'proc');
-				this.formData.gamas = this.normalizeItems(incoming.gamas, 'gama');
-				this.formData.periods = this.normalizePeriods(incoming.periods);
+            init() {
+                const incoming = this.initialSettings && typeof this.initialSettings === 'object' ? this.initialSettings : {};
+                this.formData.currency_code = incoming.currency_code || 'PEN';
+                this.formData.texts = incoming.texts || {};
+                this.formData.processors = this.normalizeItems(incoming.processors, 'proc');
+                this.formData.gamas = this.normalizeItems(incoming.gamas, 'gama');
+                this.formData.periods = this.normalizePeriods(incoming.periods);
+                
+                // NUEVO: Inicializar periodos para adicionales
+                this.formData.addon_periods = this.normalizePeriods(incoming.addon_periods || [{ id: 'addon_meses_1_12', label: '1 a 12 meses', unit: 'meses', min_value: 1, max_value: '' }]);
 
-				this.formData.addons = incoming.addons || { ram: [], storage: [] };
-				
-				this.formData.combinations = incoming.combinations || {};
-				this.formData.prices = incoming.prices || {};
-				this.actualizarSimbolo();
-				this.normalizeMatrix();
-			},
+                // NUEVO: Actualizar la estructura de los addons para que usen "prices" en lugar de un único "price"
+                this.formData.addons = incoming.addons || { ram: [], storage: [] };
+                ['ram', 'storage'].forEach(type => {
+                    this.formData.addons[type].forEach(item => {
+                        if (!item.prices) item.prices = {};
+                        // Migración temporal por si tenían guardado .price en lugar de .prices de versiones anteriores
+                        if (item.price !== undefined && Object.keys(item.prices).length === 0) {
+                            this.formData.addon_periods.forEach(p => { item.prices[p.id] = item.price; });
+                        }
+                    });
+                });
 
-			normalizeItems(rawItems, prefix) {
-				const source = Array.isArray(rawItems) ? rawItems : [];
-				return source.map((item, idx) => ({
-					id: item.id || prefix + '_' + (idx + 1),
-					label: item.label || '',
-					front_label: item.front_label || item.label || '',
-					description: item.description || ''
-				}));
-			},
+                this.formData.combinations = incoming.combinations || {};
+                this.formData.prices = incoming.prices || {};
+                this.actualizarSimbolo();
+                this.normalizeMatrix();
+            },
 
-			normalizePeriods(rawItems) {
-				const source = Array.isArray(rawItems) ? rawItems : [];
-				return source.map((item, idx) => ({
-					id: item.id || 'periodo_' + (idx + 1),
-					label: item.label || '',
-					unit: ['semanas', 'meses'].includes(item.unit) ? item.unit : 'meses',
-					min_value: Math.max(1, parseInt(item.min_value) || 1),
-					max_value: item.max_value === '' ? '' : Math.max(1, parseInt(item.max_value) || 1)
-				}));
-			},
+            normalizeItems(rawItems, prefix) {
+                const source = Array.isArray(rawItems) ? rawItems : [];
+                return source.map((item, idx) => ({
+                    id: item.id || prefix + '_' + (idx + 1),
+                    label: item.label || '',
+                    front_label: item.front_label || item.label || '',
+                    description: item.description || ''
+                }));
+            },
 
-			actualizarSimbolo() {
-				const map = { PEN: 'S/.', USD: '$', COP: '$' };
-				this.simboloDivisa = map[this.formData.currency_code] || 'S/.';
-				this.formData.currency_symbol = this.simboloDivisa;
-			},
+            normalizePeriods(rawItems) {
+                const source = Array.isArray(rawItems) ? rawItems : [];
+                return source.map((item, idx) => ({
+                    id: item.id || 'periodo_' + (idx + 1),
+                    label: item.label || '',
+                    unit: ['semanas', 'meses'].includes(item.unit) ? item.unit : 'meses',
+                    min_value: Math.max(1, parseInt(item.min_value) || 1),
+                    max_value: item.max_value === '' ? '' : Math.max(1, parseInt(item.max_value) || 1)
+                }));
+            },
 
-			addItem(type) {
-				const list = this.formData[type];
-				let id = type + '_' + Date.now();
-				if (type === 'periods') {
-					list.push({ id: id, label: '', unit: 'meses', min_value: 1, max_value: '' });
-				} else {
-					list.push({ id: id, label: '', front_label: '', description: '' });
-				}
-				this.normalizeMatrix();
-			},
+            actualizarSimbolo() {
+                const map = { PEN: 'S/.', USD: '$', COP: '$' };
+                this.simboloDivisa = map[this.formData.currency_code] || 'S/.';
+                this.formData.currency_symbol = this.simboloDivisa;
+            },
 
-			removeItem(type, index) {
-				this.formData[type].splice(index, 1);
-				this.normalizeMatrix();
-			},
+            addItem(type) {
+                const list = this.formData[type];
+                let id = type + '_' + Date.now();
+                // NUEVO: Condición ampliada para abarcar también los periodos de los adicionales
+                if (type === 'periods' || type === 'addon_periods') {
+                    list.push({ id: id, label: '', unit: 'meses', min_value: 1, max_value: '' });
+                } else {
+                    list.push({ id: id, label: '', front_label: '', description: '' });
+                }
+                this.normalizeMatrix();
+            },
 
-			getPrice(p, g, per) {
-				return this.formData.prices[p]?.[g]?.[per] || '';
-			},
+            removeItem(type, index) {
+                this.formData[type].splice(index, 1);
+                this.normalizeMatrix();
+            },
 
-			setPrice(p, g, per, value) {
-				if (!this.formData.prices[p]) this.formData.prices[p] = {};
-				if (!this.formData.prices[p][g]) this.formData.prices[p][g] = {};
-				this.formData.prices[p][g][per] = value.replace(/[^0-9.]/g, '');
-			},
+            getPrice(p, g, per) {
+                return this.formData.prices[p]?.[g]?.[per] || '';
+            },
 
-			normalizeMatrix() {
-				const normalizedPrices = {};
-				const normalizedCombinations = {};
+            setPrice(p, g, per, value) {
+                if (!this.formData.prices[p]) this.formData.prices[p] = {};
+                if (!this.formData.prices[p][g]) this.formData.prices[p][g] = {};
+                this.formData.prices[p][g][per] = value.replace(/[^0-9.]/g, '');
+            },
 
-				this.formData.processors.forEach(proc => {
-					normalizedPrices[proc.id] = {};
-					normalizedCombinations[proc.id] = {};
+            normalizeMatrix() {
+                const normalizedPrices = {};
+                const normalizedCombinations = {};
 
-					this.formData.gamas.forEach(gama => {
-						// Setup Prices
-						normalizedPrices[proc.id][gama.id] = {};
-						this.formData.periods.forEach(per => {
-							normalizedPrices[proc.id][gama.id][per.id] = this.getPrice(proc.id, gama.id, per.id);
-						});
+                this.formData.processors.forEach(proc => {
+                    normalizedPrices[proc.id] = {};
+                    normalizedCombinations[proc.id] = {};
 
-						// Setup Combinations
-						normalizedCombinations[proc.id][gama.id] = {
-							name: this.formData.combinations[proc.id]?.[gama.id]?.name || '',
-							image: this.formData.combinations[proc.id]?.[gama.id]?.image || ''
-						};
-					});
-				});
+                    this.formData.gamas.forEach(gama => {
+                        // Setup Prices
+                        normalizedPrices[proc.id][gama.id] = {};
+                        this.formData.periods.forEach(per => {
+                            normalizedPrices[proc.id][gama.id][per.id] = this.getPrice(proc.id, gama.id, per.id);
+                        });
 
-				this.formData.prices = normalizedPrices;
-				this.formData.combinations = normalizedCombinations;
-			},
+                        // Setup Combinations
+                        normalizedCombinations[proc.id][gama.id] = {
+                            name: this.formData.combinations[proc.id]?.[gama.id]?.name || '',
+                            image: this.formData.combinations[proc.id]?.[gama.id]?.image || ''
+                        };
+                    });
+                });
 
-			openMediaUploader(procId, gamaId) {
-				let customUploader = wp.media({
-					title: 'Seleccionar Imagen de Equipo',
-					button: { text: 'Usar esta imagen' },
-					multiple: false
-				});
-				customUploader.on('select', () => {
-					let attachment = customUploader.state().get('selection').first().toJSON();
-					this.formData.combinations[procId][gamaId].image = attachment.url;
-				});
-				customUploader.open();
-			},
+                this.formData.prices = normalizedPrices;
+                this.formData.combinations = normalizedCombinations;
+            },
 
-			beforeSubmit() {
-				this.normalizeMatrix();
-				this.$refs.settingsJson.value = JSON.stringify(this.formData);
-			}
-		}));
-	});
+            openMediaUploader(procId, gamaId) {
+                let customUploader = wp.media({
+                    title: 'Seleccionar Imagen de Equipo',
+                    button: { text: 'Usar esta imagen' },
+                    multiple: false
+                });
+                customUploader.on('select', () => {
+                    let attachment = customUploader.state().get('selection').first().toJSON();
+                    this.formData.combinations[procId][gamaId].image = attachment.url;
+                });
+                customUploader.open();
+            },
+
+            beforeSubmit() {
+                this.normalizeMatrix();
+                this.$refs.settingsJson.value = JSON.stringify(this.formData);
+            }
+        }));
+    });
 </script>
