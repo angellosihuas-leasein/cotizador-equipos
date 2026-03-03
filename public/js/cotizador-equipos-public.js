@@ -143,7 +143,6 @@
         self.renderFooter();
       }
       if (action === "time-plus") {
-        // Límite dinámico: 3 si son semanas, 999 si son meses
         var maxLimit = self.state.timeUnit === "semanas" ? 3 : 36;
         self.state.timeValue = Math.min(maxLimit, self.state.timeValue + parseInt(btn.getAttribute("data-amount")));
         self.renderBody();
@@ -272,7 +271,7 @@
             }).then(resp => resp.json())
               .catch(err => console.error("Proceso en segundo plano:", err));
 
-            // ¡Lanzamos la animación de éxito al INSTANTE!
+            // Animación de éxito
             formEl.classList.add("form-animate-out");
             successEl.classList.add("success-animate-in"); 
 
@@ -311,7 +310,7 @@
         self.state.timeValue = 1;
         self.state.processorId = null;
         self.state.gamaId = null;
-        self.state.isFinished = true; // ACTIVAMOS LA BANDERA AQUÍ
+        self.state.isFinished = true;
         self.render();
       } else {
         self.renderModal();
@@ -385,33 +384,13 @@
   CotizadorUI.prototype.getIcon = function (step, i) {
     var icons = {
       1: [
-        `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M16.6667 2.5H3.33341C2.41294 2.5 1.66675 3.24619 1.66675 4.16667V12.5C1.66675 13.4205 2.41294 14.1667 3.33341 14.1667H16.6667C17.5872 14.1667 18.3334 13.4205 18.3334 12.5V4.16667C18.3334 3.24619 17.5872 2.5 16.6667 2.5Z" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M6.66675 17.5H13.3334" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M10 14.1666V17.5" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`,
-        `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M15 13.3333L18.3333 9.99996L15 6.66663" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M5.00008 6.66663L1.66675 9.99996L5.00008 13.3333" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M12.0834 3.33337L7.91675 16.6667" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`,
+        `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.6667 2.5H3.33341C2.41294 2.5 1.66675 3.24619 1.66675 4.16667V12.5C1.66675 13.4205 2.41294 14.1667 3.33341 14.1667H16.6667C17.5872 14.1667 18.3334 13.4205 18.3334 12.5V4.16667C18.3334 3.24619 17.5872 2.5 16.6667 2.5Z" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.66675 17.5H13.3334" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 14.1666V17.5" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 13.3333L18.3333 9.99996L15 6.66663" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.00008 6.66663L1.66675 9.99996L5.00008 13.3333" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.0834 3.33337L7.91675 16.6667" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
       ],
       2: [
-        `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M16.6667 2.5H3.33341C2.41294 2.5 1.66675 3.24619 1.66675 4.16667V12.5C1.66675 13.4205 2.41294 14.1667 3.33341 14.1667H16.6667C17.5872 14.1667 18.3334 13.4205 18.3334 12.5V4.16667C18.3334 3.24619 17.5872 2.5 16.6667 2.5Z" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M6.66675 17.5H13.3334" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M10 14.1666V17.5" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`,
-        `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M13.3334 5.83337H3.33341C2.41294 5.83337 1.66675 6.57957 1.66675 7.50004V12.5C1.66675 13.4205 2.41294 14.1667 3.33341 14.1667H13.3334C14.2539 14.1667 15.0001 13.4205 15.0001 12.5V7.50004C15.0001 6.57957 14.2539 5.83337 13.3334 5.83337Z" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M18.3333 9.16663V10.8333" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`,
-        `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M8.33325 8.33337V4.16671C8.33325 3.94569 8.42105 3.73373 8.57733 3.57745C8.73361 3.42117 8.94557 3.33337 9.16659 3.33337H10.8333C11.0543 3.33337 11.2662 3.42117 11.4225 3.57745C11.5788 3.73373 11.6666 3.94569 11.6666 4.16671V8.33337" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M11.6667 5C12.9928 5 14.2646 5.52678 15.2023 6.46447C16.14 7.40215 16.6667 8.67392 16.6667 10V12.5" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M3.33325 12.5V10C3.33325 8.67392 3.86004 7.40215 4.79772 6.46447C5.7354 5.52678 7.00717 5 8.33325 5" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M17.5001 12.5H2.50008C2.03984 12.5 1.66675 12.8731 1.66675 13.3333V15C1.66675 15.4602 2.03984 15.8333 2.50008 15.8333H17.5001C17.9603 15.8333 18.3334 15.4602 18.3334 15V13.3333C18.3334 12.8731 17.9603 12.5 17.5001 12.5Z" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`,
+        `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.6667 2.5H3.33341C2.41294 2.5 1.66675 3.24619 1.66675 4.16667V12.5C1.66675 13.4205 2.41294 14.1667 3.33341 14.1667H16.6667C17.5872 14.1667 18.3334 13.4205 18.3334 12.5V4.16667C18.3334 3.24619 17.5872 2.5 16.6667 2.5Z" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.66675 17.5H13.3334" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 14.1666V17.5" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.3334 5.83337H3.33341C2.41294 5.83337 1.66675 6.57957 1.66675 7.50004V12.5C1.66675 13.4205 2.41294 14.1667 3.33341 14.1667H13.3334C14.2539 14.1667 15.0001 13.4205 15.0001 12.5V7.50004C15.0001 6.57957 14.2539 5.83337 13.3334 5.83337Z" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.3333 9.16663V10.8333" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.33325 8.33337V4.16671C8.33325 3.94569 8.42105 3.73373 8.57733 3.57745C8.73361 3.42117 8.94557 3.33337 9.16659 3.33337H10.8333C11.0543 3.33337 11.2662 3.42117 11.4225 3.57745C11.5788 3.73373 11.6666 3.94569 11.6666 4.16671V8.33337" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M11.6667 5C12.9928 5 14.2646 5.52678 15.2023 6.46447C16.14 7.40215 16.6667 8.67392 16.6667 10V12.5" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.33325 12.5V10C3.33325 8.67392 3.86004 7.40215 4.79772 6.46447C5.7354 5.52678 7.00717 5 8.33325 5" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M17.5001 12.5H2.50008C2.03984 12.5 1.66675 12.8731 1.66675 13.3333V15C1.66675 15.4602 2.03984 15.8333 2.50008 15.8333H17.5001C17.9603 15.8333 18.3334 15.4602 18.3334 15V13.3333C18.3334 12.8731 17.9603 12.5 17.5001 12.5Z" stroke="#737373" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
       ],
     };
 
@@ -440,7 +419,7 @@
                     <h1 class="ceq-title ceq-welcome-title">${t.welcome_title || "Cotiza el alquiler de laptops para tu empresa en segundos"}</h1>
                     <p class="ceq-subtitle ceq-welcome-subtitle">${t.welcome_subtitle || "Obtén precios al instante con nuestro cotizador digital o configura una propuesta técnica a medida."}</p>
                     <div class="ceq-welcome-actions">
-                        <button class="ceq-btn-primary" data-action="start-smart">
+                        <button id="btn-start-smart-welcome" class="ceq-btn-primary" data-action="start-smart">
                             ${btnPrimaryText}
                             <svg class="ceq-icon-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -448,7 +427,7 @@
                             </svg>
                         </button>
                         
-                        <button class="ceq-btn-outline" data-action="go-manual">
+                        <button id="btn-go-manual-welcome" class="ceq-btn-outline" data-action="go-manual">
                             <svg style="width:24px;height:24px;margin-right:8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                 <g class="ceq-slider-top">
                                     <line x1="6" y1="8" x2="20" y2="8" stroke-width="2.5" stroke-linecap="round"></line>
@@ -548,8 +527,6 @@
           return '<option value="' + s.id + '" ' + (s.id === self.state.addonStorageId ? 'selected' : '') + '>' + s.label + '</option>';
       }).join('');
 
-
-      // Ajustes para el modo manual (Paso 5) vs Automático (Paso 3)
       var boxOneContent = this.state.step === 5 
         ? `<div class="ceq-box-base-wrapper" style="display: flex; flex-wrap: wrap; gap: 12px; text-align: left;">
                 <div style="width: 48%;">
@@ -572,7 +549,7 @@
         : `<div class="ceq-box-title">${laptopName}</div><div class="ceq-box-desc">${specsDescription}</div>`;
 
       var scrollBtn = this.state.step === 5 ? `
-        <button type="button" data-action="scroll-down" class="ceq-scroll-arrow" title="Ver más opciones">
+        <button type="button" id="btn-scroll-down-manual" data-action="scroll-down" class="ceq-scroll-arrow" title="Ver más opciones">
             <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
         </button>` : "";
 
@@ -621,7 +598,6 @@
                     </div>
                 </div>
 
-
               <div class="ceq-layout-right mobile-layout">
                   <div class="ceq-right-card">
                       <div class="ceq-circle">
@@ -636,8 +612,8 @@
                       </div>
                   </div>
               </div>
-
             </div>
+            
             <div class="ceq-layout-right">
                 <div class="ceq-right-card">
                     <div class="ceq-circle">
@@ -655,7 +631,6 @@
         </div>`;
 
         if (savedScrollTop > 0) {
-            // Usamos setTimeout en 0 para darle 1 milisegundo al navegador de pintar el DOM nuevo
             setTimeout(function() {
                 var newScrollContainer = body.querySelector('.ceq-layout-left');
                 if (newScrollContainer) {
@@ -718,20 +693,23 @@
     var t = this.config.texts || {};
     var waUrl = t.whatsapp_url || "https://wa.me/51987146591"; 
 
+    var modeName = this.state.mode;
+    var stepName = "step" + this.state.step;
+
     var back =
-      '<button class="ceq-btn-ghost" data-action="back"><svg style="width:20px;height:20px;margin-right:8px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg> Volver</button>';
+      '<button id="btn-back-' + modeName + '-' + stepName + '" class="ceq-btn-ghost" data-action="back"><svg style="width:20px;height:20px;margin-right:8px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg> Volver</button>';
 
     var whatsappLinkHtml = `
         <div class="ceq-s4-manual-link" style="text-align: center; margin-top: 24px; font-size: 14px; color: #737373;">
-            ¿Tienes dudas? <a href="${waUrl}" target="_blank" style="display: inline-flex; align-items: center; gap: 10px;text-decoration: none; font-weight: 600;">Conversa con un especialista <img src="${typeof cotizadorData !== 'undefined' ? cotizadorData.pluginUrl : ''}img/whatsapp.svg" alt="WhatsApp Icon"></a>
+            ¿Tienes dudas? <a id="btn-whatsapp-${modeName}-${stepName}" href="${waUrl}" target="_blank" style="display: inline-flex; align-items: center; gap: 10px;text-decoration: none; font-weight: 600;">Conversa con un especialista <img src="${typeof cotizadorData !== 'undefined' ? cotizadorData.pluginUrl : ''}img/whatsapp.svg" alt="WhatsApp Icon"></a>
         </div>`;
 
     if (this.state.step === 4) {
       footer.innerHTML = `
         <div class="ceq-s4-footer-wrap">
             <div class="ceq-s4-actions">
-                <button class="ceq-btn-ghost-dark" data-action="back">← Volver</button>
-                <button class="ceq-btn-primary ceq-s4-btn" data-action="open-modal">Quiero la cotización en mi correo</button>
+                <button id="btn-back-${modeName}-step4" class="ceq-btn-ghost-dark" data-action="back">← Volver</button>
+                <button id="btn-open-modal-${modeName}-step4" class="ceq-btn-primary ceq-s4-btn" data-action="open-modal">Quiero la cotización en mi correo</button>
             </div>
             ${whatsappLinkHtml}
         </div>
@@ -741,7 +719,7 @@
 
     var nextBtn = (this.state.step === 1 || this.state.step === 2) 
       ? "" 
-      : '<button class="ceq-btn-primary" data-action="next" ' +
+      : '<button id="btn-next-' + modeName + '-' + stepName + '" class="ceq-btn-primary" data-action="next" ' +
         (this.canContinue() ? "" : "disabled") +
         ">" +
         ((this.state.step === 3 || this.state.step === 5) ? "Ver mi solución →" : "Continuar →") +
@@ -765,10 +743,12 @@
       return;
     }
 
+    var modeName = this.state.mode;
+
     modalRoot.innerHTML = `
         <div class="ceq-modal-overlay">
             <div class="ceq-modal-box ceq-anim-container">
-                <button type="button" class="ceq-modal-close" data-action="close-modal" style="z-index: 20;">
+                <button id="btn-close-modal-icon" type="button" class="ceq-modal-close" data-action="close-modal" style="z-index: 20;">
                     <svg style="width:20px;height:20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
                 
@@ -779,7 +759,42 @@
                     <div style="display: none !important;">
                         <input type="text" name="website_url" tabindex="-1" autocomplete="off">
                     </div>
-
+                    <div class="ceq-form-group">
+                        <label class="ceq-form-label">Nombre completo *</label>
+                        <input type="text" name="nombre" class="ceq-form-input" required placeholder="Pierina Calle" autocomplete="off">
+                        <div id="error-nombre" class="error-container">
+                            <div class="error-inner">
+                                <div class="ceq-error-pill">
+                                    <div class="ceq-error-dot"></div>
+                                    <span class="message-text ceq-error-text"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ceq-form-group">
+                        <label class="ceq-form-label">Correo corporativo *</label>
+                        <input type="email" name="correo" class="ceq-form-input" required placeholder="pierina@empresa.com" autocomplete="off">
+                        <div id="error-correo" class="error-container">
+                            <div class="error-inner">
+                                <div class="ceq-error-pill">
+                                    <div class="ceq-error-dot"></div>
+                                    <span class="message-text ceq-error-text"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ceq-form-group">
+                        <label class="ceq-form-label">Celular *</label>
+                        <input type="tel" name="telefono" class="ceq-form-input" required placeholder="9XXXXXXXX" maxlength="9" autocomplete="off">
+                        <div id="error-telefono" class="error-container">
+                            <div class="error-inner">
+                                <div class="ceq-error-pill">
+                                    <div class="ceq-error-dot"></div>
+                                    <span class="message-text ceq-error-text"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="ceq-form-group">
                         <label class="ceq-form-label">RUC *</label>
                         <input type="text" name="ruc" class="ceq-form-input" required placeholder="Ej: 20123456789" maxlength="11" autocomplete="off">
@@ -792,43 +807,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="ceq-form-group">
-                        <label class="ceq-form-label">Nombre completo *</label>
-                        <input type="text" name="nombre" class="ceq-form-input" required placeholder="Juan Pérez" autocomplete="off">
-                        <div id="error-nombre" class="error-container">
-                            <div class="error-inner">
-                                <div class="ceq-error-pill">
-                                    <div class="ceq-error-dot"></div>
-                                    <span class="message-text ceq-error-text"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="ceq-form-group">
-                        <label class="ceq-form-label">Correo corporativo *</label>
-                        <input type="email" name="correo" class="ceq-form-input" required placeholder="juan@empresa.com" autocomplete="off">
-                        <div id="error-correo" class="error-container">
-                            <div class="error-inner">
-                                <div class="ceq-error-pill">
-                                    <div class="ceq-error-dot"></div>
-                                    <span class="message-text ceq-error-text"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="ceq-form-group">
-                        <label class="ceq-form-label">WhatsApp *</label>
-                        <input type="tel" name="telefono" class="ceq-form-input" required placeholder="9XXXXXXXX" maxlength="9" autocomplete="off">
-                        <div id="error-telefono" class="error-container">
-                            <div class="error-inner">
-                                <div class="ceq-error-pill">
-                                    <div class="ceq-error-dot"></div>
-                                    <span class="message-text ceq-error-text"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
                     <div class="ceq-checkbox-group">
                         <input type="checkbox" id="terminos-cotizador" name="terminos" class="ceq-checkbox-input" required>
                         <label for="terminos-cotizador" class="ceq-checkbox-label">
@@ -844,7 +822,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="ceq-btn-primary ceq-btn-block">
+                    <button id="btn-submit-quote-${modeName}" type="submit" class="ceq-btn-primary ceq-btn-block">
                         <span class="btn-text">Enviar cotización</span>
                         <div class="loader"></div>
                     </button>
@@ -860,19 +838,34 @@
                         autoplay>
                     </lottie-player>
                     <h3 class="ceq-modal-title" style="margin-top:20px;">¡Cotización enviada!</h3>
-                    <p class="ceq-modal-desc">Revisa tu bandeja de entrada.</p>
-                    <button type="button" class="ceq-btn-primary ceq-s4-btn" data-action="close-modal" style="margin-top:20px;">Cerrar</button>
+                    <p class="ceq-modal-desc">Por favor, revisa tu bandeja de entrada y WhatsApp.</p>
+                    <button id="btn-close-success-view" type="button" class="ceq-btn-primary ceq-s4-btn" data-action="close-modal" style="margin-top:20px;">Cerrar</button>
                 </div>
             </div>
         </div>
       `;
   };
 
+  CotizadorUI.prototype.getMatchedRule = function () {
+    var v = this.state.timeValue,
+      u = this.state.timeUnit,
+      match = null;
+    this.config.periods.forEach((p) => {
+      if (
+        p.unit === u &&
+        v >= p.min_value &&
+        (p.max_value === "" || v <= parseInt(p.max_value))
+      )
+        match = p;
+    });
+    return match;
+  };
+
   CotizadorUI.prototype.getMatchedAddonRule = function () {
     var v = this.state.timeValue,
       u = this.state.timeUnit,
       match = null;
-    if (!this.config.addon_periods) return null;
+    if (!this.config.addon_periods || !this.config.addon_periods.length) return null;
     this.config.addon_periods.forEach((p) => {
       if (
         p.unit === u &&
@@ -927,6 +920,7 @@
       processors: r.processors || [],
       gamas: r.gamas || [],
       periods: r.periods || [],
+      addon_periods: r.addon_periods || [], 
       combinations: r.combinations || {},
       prices: r.prices || {},
       addons: r.addons || {ram: [], storage: []},

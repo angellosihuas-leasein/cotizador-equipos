@@ -665,6 +665,9 @@
   padding: 8px;
   border-radius: 50%;
   transition: all 0.2s;
+	width: 36px;
+	height: 36px;
+	place-content: center;
 }
 
 .ce-cotizador .ceq-modal-close:hover {
@@ -1573,4 +1576,14 @@
   .ce-cotizador .ceq-circle{
     margin: 0 auto 15px;
   }
+}
+
+
+
+input[type=checkbox]{
+    width: 20px !important;
+    min-width: 20px !important;
+    height: 20px !important;
+    border-radius: 200px !important;
+    transform: translateY(5px) !important;
 }
