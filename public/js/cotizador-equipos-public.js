@@ -7,13 +7,12 @@
     if (!document.querySelector('script[src="' + lottieUrl + '"]')) {
       var script = document.createElement("script");
       script.src = lottieUrl;
-      script.async = true;
+      script.defer = true; // Cambiamos async por defer
       document.head.appendChild(script);
     }
   }
 
   function initCotizadores() {
-    loadLottieScript();
     
     var containers = document.querySelectorAll(".ce-cotizador[data-ce-config]");
     containers.forEach(function (container) {
@@ -29,7 +28,7 @@
     });
   }
 
-  function CotizadorUI(root, config) {
+	function CotizadorUI(root, config) {
     this.root = root;
     this.config = this.normalizeConfig(config);
     this.state = {
@@ -41,11 +40,17 @@
       timeValue: 1,
       quantity: 1,
       isModalOpen: false,
-      addonRamId: "", 
-      addonStorageId: "",
+      // NUEVO: Tomamos el ID del primer elemento de la lista por defecto
+      addonRamId: (this.config.addons && this.config.addons.ram && this.config.addons.ram.length > 0) ? this.config.addons.ram[0].id : "", 
+      addonStorageId: (this.config.addons && this.config.addons.storage && this.config.addons.storage.length > 0) ? this.config.addons.storage[0].id : "",
       isFinished: false
     };
   }
+
+  // --- NUEVA FUNCIÓN PARA FORMATO DE NÚMEROS CON COMAS ---
+  CotizadorUI.prototype.formatNumber = function (num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
 
   CotizadorUI.prototype.mount = function () {
     this.root.innerHTML =
@@ -154,7 +159,8 @@
         self.renderFooter();
       }
       if (action === "qty-plus") {
-        self.state.quantity = Math.min(999, self.state.quantity + parseInt(btn.getAttribute("data-amount")));
+        // Límite máximo en el botón actualizado a 100
+        self.state.quantity = Math.min(100, self.state.quantity + parseInt(btn.getAttribute("data-amount")));
         self.renderBody();
         self.renderFooter();
       }
@@ -162,6 +168,8 @@
       if (action === "open-modal") {
         self.state.isModalOpen = true;
         self.renderModal();
+
+        loadLottieScript();
       }
       if (action === "close-modal") {
         self.closeModal();
@@ -193,8 +201,36 @@
       }
     });
 
-    // Validaciones
+    // Validaciones e Inputs en Tiempo Real
     this.root.addEventListener("input", function(e) {
+        var action = e.target.getAttribute("data-action");
+
+        // --- Inputs Manuales de Cantidad y Tiempo ---
+        if (action === "input-qty" || action === "input-time") {
+            // Solo permitir números
+            e.target.value = e.target.value.replace(/\D/g, '');
+            var val = parseInt(e.target.value, 10);
+            
+            if (!isNaN(val)) {
+                if (action === "input-qty") {
+                    // Límite tope visual y lógico de 100 laptops
+                    if (val > 100) val = 100;
+                    e.target.value = val;
+                    self.state.quantity = val > 0 ? val : 1;
+                }
+                if (action === "input-time") {
+                    // Límite tope visual y lógico de 36 meses (o 3 semanas)
+                    var maxLimit = self.state.timeUnit === "semanas" ? 3 : 36;
+                    if (val > maxLimit) val = maxLimit;
+                    e.target.value = val;
+                    self.state.timeValue = val > 0 ? val : 1;
+                }
+                // Actualiza el precio dinámicamente sin perder el foco del input
+                if (val > 0) self.updatePriceDisplay();
+            }
+        }
+
+        // --- Resto de campos del modal ---
         if (e.target.name === "nombre") {
             e.target.value = e.target.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ ]/g, "");
             self.clearError(e.target);
@@ -219,6 +255,22 @@
     });
 
     this.root.addEventListener("focusout", function(e) {
+        var action = e.target.getAttribute("data-action");
+
+        // Al salir del input de cantidad o tiempo, validar vacíos y topes
+        if (action === "input-qty" || action === "input-time") {
+            if (e.target.value === '' || parseInt(e.target.value, 10) === 0) {
+                if (action === "input-qty") self.state.quantity = 1;
+                if (action === "input-time") self.state.timeValue = 1;
+            } else {
+                if (action === "input-qty") e.target.value = self.state.quantity;
+                if (action === "input-time") e.target.value = self.state.timeValue;
+            }
+            // Recargamos los componentes visuales para formatear correctamente
+            self.renderBody();
+            self.renderFooter();
+        }
+
         if(e.target.name === "ruc" && e.target.value.length > 0 && e.target.value.length < 11) {
              self.showError(e.target, "El RUC debe tener 11 dígitos");
         }
@@ -291,6 +343,20 @@
     });
   };
 
+  CotizadorUI.prototype.updatePriceDisplay = function() {
+    var pBase = this.getBasePrice();
+    var tPricePerPeriod = pBase * this.state.quantity;
+    var qtyLabel = this.state.quantity > 1 ? "laptops" : "laptop";
+
+    var valEls = this.root.querySelectorAll(".ceq-circle-val");
+    var subEls = this.root.querySelectorAll(".ceq-circle-sub");
+    var self = this;
+    
+    // AQUÍ APLICAMOS LA FUNCIÓN FORMATNUMBER
+    valEls.forEach(function(el) { el.innerHTML = self.config.currency_symbol + self.formatNumber(Math.round(tPricePerPeriod)); });
+    subEls.forEach(function(el) { el.innerHTML = self.config.currency_symbol + self.formatNumber(Math.round(pBase)) + " x " + self.state.quantity + " " + qtyLabel; });
+  };
+
   CotizadorUI.prototype.closeModal = function () {
     var self = this;
     var overlay = this.root.querySelector(".ceq-modal-overlay");
@@ -303,13 +369,16 @@
     setTimeout(function () {
       self.state.isModalOpen = false;
       
-      if (isSuccessActive) {
+	if (isSuccessActive) {
         self.state.step = 0;
         self.state.mode = "smart";
         self.state.quantity = 1;
         self.state.timeValue = 1;
         self.state.processorId = null;
         self.state.gamaId = null;
+        // NUEVO: Reiniciamos la RAM y Almacenamiento a su primera opción
+        self.state.addonRamId = (self.config.addons && self.config.addons.ram && self.config.addons.ram.length > 0) ? self.config.addons.ram[0].id : "";
+        self.state.addonStorageId = (self.config.addons && self.config.addons.storage && self.config.addons.storage.length > 0) ? self.config.addons.storage[0].id : "";
         self.state.isFinished = true;
         self.render();
       } else {
@@ -353,24 +422,29 @@
     var st = {
       1: {
         eye: "PASO 1 DE 4",
-        title: "¿Qué aplicaciones vas a utilizar?",
-        sub: "Elige la potencia que mejor se adapta a tus tareas habituales.",
+        title: "¿Qué programas usarás?",
+        sub: "Elige los programas que usas y deja que el sistema haga el cálculo por ti.",
       },
       2: {
         eye: "PASO 2 DE 4",
-        title: "¿Qué tan pesada será la jornada para tu laptop?",
-        sub: "El chasis determina la durabilidad, ventilación y portabilidad del equipo.",
+        title: "¿Qué nivel de uso tendrá tu laptop?",
+        sub: "Cuéntanos tu ritmo de trabajo para elegir el diseño y la durabilidad ideales.",
       },
-      3: { eye: "PASO 3 DE 4", title: "Configura tu plan de alquiler" },
+      3: { eye: "PASO 3 DE 4", title: "Mira la laptop que elegimos para ti" },
       4: {
         eye: "PASO 4 DE 4",
         title: "¡Listo! Mira el resumen de tu alquiler"
       },
       5: {
-        title: t.manual_title || "Configura tu plan de alquiler",
+        title: t.manual_title || "¡Listo! Mira el resumen de tu alquiler",
       },
     }[this.state.step];
 
+	if (this.state.step === 5 && st.title === "Configuración rápida") {
+      st.title = "Configura tu plan de alquiler";
+    }	  
+	  
+	  
     this.root.querySelector(".ceq-header").innerHTML =
       '<span class="ceq-eyebrow">' +
       (st.eye || "") +
@@ -441,6 +515,12 @@
                             ${t.btn_manual || "Configura aquí"}
                         </button>
                     </div>
+
+					<p class="ceq-subtitle ceq-welcome-subtitle" style="
+						font-size: 16px;
+						margin-top: 30px;
+						margin-bottom: 0px;
+					">¿Buscas plazos de 36 meses? Mira nuestro <a style="text-decoration: underline;" href="https://leasein.pe/leasing-operativo/">Leasing Operativo.</a></p>
                 </div>
                 <div class="ceq-welcome-visual">
                     <img src="${typeof cotizadorData !== 'undefined' ? cotizadorData.pluginUrl : ''}img/yosellin.png" alt="Especialista" class="ceq-welcome-img" />
@@ -520,10 +600,11 @@
           return '<option value="' + g.id + '" ' + (g.id === self.state.gamaId ? 'selected' : '') + '>' + g.label + '</option>';
       }).join('');
 
-      var ramOptions = '<option value="">Base (16GB RAM)</option>' + (this.config.addons?.ram || []).map(function(r) {
+var ramOptions = (this.config.addons?.ram || []).map(function(r) {
           return '<option value="' + r.id + '" ' + (r.id === self.state.addonRamId ? 'selected' : '') + '>' + r.label + '</option>';
       }).join('');
-      var stoOptions = '<option value="">Base (512GB SSD)</option>' + (this.config.addons?.storage || []).map(function(s) {
+      
+      var stoOptions = (this.config.addons?.storage || []).map(function(s) {
           return '<option value="' + s.id + '" ' + (s.id === self.state.addonStorageId ? 'selected' : '') + '>' + s.label + '</option>';
       }).join('');
 
@@ -538,11 +619,11 @@
                     <select class="ceq-form-input" data-action="change-gama" style="width:100%; cursor:pointer;">${gamaOptions}</select>
                 </div>
                 <div style="width: 48%;">
-                    <label style="display:block; font-size:12px; color:#737373; margin-bottom:4px; font-weight:600;">RAM Adicional</label>
+                    <label style="display:block; font-size:12px; color:#737373; margin-bottom:4px; font-weight:600;">RAM</label>
                     <select class="ceq-form-input" data-action="change-addon-ram" style="width:100%; cursor:pointer;">${ramOptions}</select>
                 </div>
                 <div style="width: 48%;">
-                    <label style="display:block; font-size:12px; color:#737373; margin-bottom:4px; font-weight:600;">Almacenamiento Extra</label>
+                    <label style="display:block; font-size:12px; color:#737373; margin-bottom:4px; font-weight:600;">Almacenamiento</label>
                     <select class="ceq-form-input" data-action="change-addon-storage" style="width:100%; cursor:pointer;">${stoOptions}</select>
                 </div>
            </div>`
@@ -555,6 +636,7 @@
 
       var boxOneEyebrow = this.state.step === 5 ? "Configura tu equipo" : "Esta es la mejor opción para tu operación";
 
+      // APLICAMOS LA FUNCIÓN FORMATNUMBER EN EL RENDER
       body.innerHTML = `
       ${scrollBtn}
         <div class="ceq-layout-split">
@@ -570,7 +652,9 @@
                     <div>
                         <div class="ceq-counter-wrap" style="margin:0;">
                             <button class="ceq-c-btn" style="width:40px;height:40px;font-size:20px;" data-action="qty-minus" data-amount="1">−</button>
-                            <div class="ceq-c-val"><strong style="font-size:24px;margin:0 16px;">${this.state.quantity}</strong></div>
+                            <div class="ceq-c-val">
+                                <input type="text" class="ceq-qty-input" data-action="input-qty" value="${this.state.quantity}" />
+                            </div>
                             <button class="ceq-c-btn" style="width:40px;height:40px;font-size:20px;" data-action="qty-plus" data-amount="1">+</button>
                         </div>
                     </div>
@@ -585,7 +669,10 @@
                     </div>
                     <div class="ceq-counter-wrap">
                         <button class="ceq-c-btn" data-action="time-minus" data-amount="1">−</button>
-                        <div class="ceq-c-val"><strong>${this.state.timeValue}</strong><span>${this.state.timeUnit}</span></div>
+                        <div class="ceq-c-val">
+                            <input type="text" class="ceq-time-input" data-action="input-time" value="${this.state.timeValue}" />
+                            <span>${this.state.timeUnit}</span>
+                        </div>
                         <button class="ceq-c-btn" data-action="time-plus" data-amount="1">+</button>
                     </div>
                     <div class="ceq-tip-card">
@@ -593,7 +680,7 @@
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 9.33337C10.1333 8.66671 10.4667 8.20004 11 7.66671C11.6667 7.06671 12 6.20004 12 5.33337C12 4.27251 11.5786 3.25509 10.8284 2.50495C10.0783 1.7548 9.06087 1.33337 8 1.33337C6.93913 1.33337 5.92172 1.7548 5.17157 2.50495C4.42143 3.25509 4 4.27251 4 5.33337C4 6.00004 4.13333 6.80004 5 7.66671C5.46667 8.13337 5.86667 8.66671 6 9.33337" stroke="#FE5000" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 12H10" stroke="#FE5000" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.6665 14.6666H9.33317" stroke="#FE5000" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </div>
                         <div class="ceq-tip-content">
-                            <span class="ceq-tip-text">Un tip: a más meses, tu cuota mensual baja.</span>
+                            <span class="ceq-tip-text">A mayor plazo, tu inversión mensual disminuye.</span>
                         </div>
                     </div>
                 </div>
@@ -602,8 +689,8 @@
                   <div class="ceq-right-card">
                       <div class="ceq-circle">
                           <span class="ceq-circle-lbl">CUOTA MENSUAL</span>
-                          <span class="ceq-circle-val">${this.config.currency_symbol}${Math.round(tPricePerPeriod)}</span>
-                          <span class="ceq-circle-sub">${this.config.currency_symbol}${Math.round(pBase)} x ${this.state.quantity} ${qtyLabel}</span>
+                          <span class="ceq-circle-val">${this.config.currency_symbol}${this.formatNumber(Math.round(tPricePerPeriod))}</span>
+                          <span class="ceq-circle-sub">${this.config.currency_symbol}${this.formatNumber(Math.round(pBase))} x ${this.state.quantity} ${qtyLabel}</span>
                       </div>
                       <div class="ceq-info-card">
                           <span class="ceq-info-label">SISTEMA OPERATIVO</span>
@@ -618,8 +705,8 @@
                 <div class="ceq-right-card">
                     <div class="ceq-circle">
                         <span class="ceq-circle-lbl">CUOTA MENSUAL</span>
-                        <span class="ceq-circle-val">${this.config.currency_symbol}${Math.round(tPricePerPeriod)}</span>
-                        <span class="ceq-circle-sub">${this.config.currency_symbol}${Math.round(pBase)} x ${this.state.quantity} ${qtyLabel}</span>
+                        <span class="ceq-circle-val">${this.config.currency_symbol}${this.formatNumber(Math.round(tPricePerPeriod))}</span>
+                        <span class="ceq-circle-sub">${this.config.currency_symbol}${this.formatNumber(Math.round(pBase))} x ${this.state.quantity} ${qtyLabel}</span>
                     </div>
                     <div class="ceq-info-card">
                         <span class="ceq-info-label">SISTEMA OPERATIVO</span>
@@ -643,16 +730,17 @@
 
     if (this.state.step === 4) {
       var laptopImageHtml = combData.image 
-        ? `<img src="${combData.image}" alt="${laptopName}" style="max-width: 100%; max-height: 100%; object-fit: contain; max-width: 360px;">` 
+        ? `<img src="${combData.image}" alt="${laptopName}" style="max-width: 100%; max-height: 100%; object-fit: contain; max-width: 280px;">` 
         : '';
 
+      // APLICAMOS LA FUNCIÓN FORMATNUMBER AL RESUMEN DEL PASO 4
       body.innerHTML = `
         <div class="ceq-step4-container">
             <div class="ceq-step4-top">
                 <div class="ceq-step4-price-circle">
                     <div class="ceq-s4-lbl">COSTO MENSUAL<br>POR LAPTOP*</div>
                     <div class="ceq-s4-specs" style="color: #fe5000; font-size: 20px; font-weight: 600; text-transform: uppercase; margin-bottom: 10px;">${laptopName}</div>
-                    <div class="ceq-s4-price"><span>${this.config.currency_symbol}</span> ${Math.round(pBase)}</div>
+                    <div class="ceq-s4-price"><span>${this.config.currency_symbol}</span> ${this.formatNumber(Math.round(pBase))}</div>
                     <div class="ceq-s4-disc">*El precio no incluye IGV.</div>
                 </div>
                 <div class="ceq-step4-images">
@@ -691,7 +779,7 @@
     }
 
     var t = this.config.texts || {};
-    var waUrl = t.whatsapp_url || "https://wa.me/51987146591"; 
+    var waUrl = "https://api.whatsapp.com/send?phone=51987146591&text=Hola%20Josselyn.%20No%20encuentro%20lo%20que%20necesito%20en%20el%20cotizador.%20Quiero%20conversar%20con%20un%20especialista."; 
 
     var modeName = this.state.mode;
     var stepName = "step" + this.state.step;
@@ -709,7 +797,7 @@
         <div class="ceq-s4-footer-wrap">
             <div class="ceq-s4-actions">
                 <button id="btn-back-${modeName}-step4" class="ceq-btn-ghost-dark" data-action="back">← Volver</button>
-                <button id="btn-open-modal-${modeName}-step4" class="ceq-btn-primary ceq-s4-btn" data-action="open-modal">Quiero la cotización en mi correo</button>
+                <button id="btn-open-modal-${modeName}-step4" class="ceq-btn-primary ceq-s4-btn" data-action="open-modal">Envíame la cotización</button>
             </div>
             ${whatsappLinkHtml}
         </div>
