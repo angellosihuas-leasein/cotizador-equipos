@@ -3,7 +3,7 @@
  * Plugin Name:       Cotizador de Equipos - Leasein
  * Plugin URI:        https://leasein.pe/
  * Description:       Cotizador avanzado con reglas de precios, gamas y plazos para alquiler de equipos y leasing operativo.
- * Version:           5.0.0
+ * Version:           5.2.5
  * Author:            Leasein alquiler de laptops
  * Author URI:        https://leasein.pe/
  * Text Domain:       cotizador-equipos
@@ -14,7 +14,7 @@
 if ( ! defined( 'WPINC' ) ) {
     die;
 }
-define( 'COTIZADOR_EQUIPOS_VERSION', '5.0.0' );
+define( 'COTIZADOR_EQUIPOS_VERSION', '5.2.5' );
 
 function activar_cotizador_equipos() {
     require_once plugin_dir_path( __FILE__ ) . 'includes/class-cotizador-equipos-activator.php';

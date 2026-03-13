@@ -11,20 +11,40 @@ class Cotizador_Equipos_Public {
 	}
 
 	public function register_assets() {
-		// 1. Solo REGISTRAMOS los recursos, no los encolamos globalmente.
-		wp_register_style(
+		// 1. ENCOLAMOS (wp_enqueue_*) los recursos globalmente.
+        // Esto asegura que se inyecten en el <head> correctamente antes de que actúe la caché.
+		wp_enqueue_style(
 			$this->plugin_name . '-public',
 			plugin_dir_url( __FILE__ ) . 'css/cotizador-equipos-public.css',
 			array(),
 			$this->version
 		);
 
-		wp_register_script(
+		wp_enqueue_script(
 			$this->plugin_name . '-public',
 			plugin_dir_url( __FILE__ ) . 'js/cotizador-equipos-public.js',
 			array(),
 			$this->version,
 			true // El script seguirá cargando en el footer
+		);
+
+        // 2. Pasamos las variables al script aquí mismo
+		wp_localize_script(
+			$this->plugin_name . '-public',
+			'cotizadorData',
+			array(
+				'pluginUrl' => plugin_dir_url( __FILE__ )
+			)
+		);
+
+		// 3. Pasamos las variables de AJAX
+		wp_localize_script( 
+			$this->plugin_name . '-public', 
+			'cotizadorWP', 
+			array(
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'nonce'    => wp_create_nonce( 'cotizador_nonce_action' )
+			)
 		);
 	}
 
@@ -40,28 +60,8 @@ class Cotizador_Equipos_Public {
 			return '';
 		}
 
-		// 2. ENCOLAMOS (Cargamos) los recursos únicamente cuando se lee este shortcode
-		wp_enqueue_style( $this->plugin_name . '-public' );
-		wp_enqueue_script( $this->plugin_name . '-public' );
-
-		// 3. Pasamos las variables al script que acabamos de encolar
-		wp_localize_script(
-			$this->plugin_name . '-public',
-			'cotizadorData',
-			array(
-				'pluginUrl' => plugin_dir_url( __FILE__ )
-			)
-		);
-
-		// 4. Pasamos las variables de AJAX (las que estaban en el archivo principal antes)
-		wp_localize_script( 
-			$this->plugin_name . '-public', 
-			'cotizadorWP', 
-			array(
-				'ajax_url' => admin_url( 'admin-ajax.php' ),
-				'nonce'    => wp_create_nonce( 'cotizador_nonce_action' )
-			)
-		);
+		// (ELIMINADO) Ya no encolamos ni pasamos variables locales aquí adentro 
+        // para evitar que la caché rompa el diseño.
 
 		ob_start();
 		?>

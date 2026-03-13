@@ -119,11 +119,15 @@ class Cotizador_Ajax {
             }
         }
 
-        // 3. Armar el texto para la pestaña "NOTAS" y sumar el costo y capacidad de adicionales
+        // 3. Armar el texto para la pestaña "NOTAS" de Odoo y sumar los costos/capacidades
         $texto_adicionales = "";
         
         $total_ram = 16; // RAM Base
         $total_storage_gb = 512; // Almacenamiento Base GB
+
+        // Estos son los valores BASE rígidos que irán a Odoo para no romper sus validaciones
+        $p_ram_odoo = 16; 
+        $p_almacenamiento_odoo = "Sólido 512GB";
 
         if (!empty($addon_ram_id) || !empty($addon_storage_id)) {
             $texto_adicionales .= "\n\n=== ADICIONALES SELECCIONADOS ===";
@@ -136,7 +140,7 @@ class Cotizador_Ajax {
                         $p_unit_price += $r_price;
                         $texto_adicionales .= "\n- RAM Extra: " . $ram['label'] . " (+S/." . $r_price . ")";
                         
-                        // Extraer números y sumar RAM
+                        // Extraer números y sumar a la RAM Total para el PDF
                         preg_match('/(\d+)/', $ram['label'], $matches);
                         $extra_ram = isset($matches[1]) ? intval($matches[1]) : 0;
                         $total_ram += $extra_ram;
@@ -152,7 +156,7 @@ class Cotizador_Ajax {
                         $p_unit_price += $s_price;
                         $texto_adicionales .= "\n- Almacenamiento Extra: " . $sto['label'] . " (+S/." . $s_price . ")";
                         
-                        // Extraer números y tipo de unidad (GB o TB) para sumar
+                        // Extraer números y tipo de unidad (GB o TB) para sumar al PDF
                         preg_match('/(\d+)\s*(GB|TB)/i', $sto['label'], $matches);
                         $extra_sto = isset($matches[1]) ? intval($matches[1]) : 0;
                         $unit = isset($matches[2]) ? strtoupper($matches[2]) : '';
@@ -165,16 +169,15 @@ class Cotizador_Ajax {
             }
         }
 
-        // Formatear los strings que viajan a base de datos y Odoo
-        $p_ram_str = "{$total_ram}GB RAM";
-        $p_ram_odoo = $total_ram; 
+        // Formatear los strings que viajan a LA BASE DE DATOS LOCAL (Generarán el PDF hermoso)
+        $p_ram_str_pdf = "{$total_ram}GB RAM";
 
         if ($total_storage_gb >= 1024) {
             $tb = $total_storage_gb / 1024;
             $formatted_tb = (floor($tb) == $tb) ? $tb : number_format($tb, 1, '.', '');
-            $p_almacenamiento = "Sólido {$formatted_tb}TB";
+            $p_almacenamiento_pdf = "Sólido {$formatted_tb}TB";
         } else {
-            $p_almacenamiento = "Sólido {$total_storage_gb}GB";
+            $p_almacenamiento_pdf = "Sólido {$total_storage_gb}GB";
         }
 
         $proc_label = 'Laptop Estándar';
@@ -197,25 +200,24 @@ class Cotizador_Ajax {
 
         $descripcion_odoo = "Rol: " . $p_rol . "\nNumero de empleados: " . $p_empleados . $texto_adicionales;
 
-        // 4. Base de Datos Local
+        // 4. Base de Datos Local (Insertamos $p_ram_str_pdf y $p_almacenamiento_pdf para el PDF)
         $mydb = new wpdb('root', 'L@b0ratR1o.', 'leasein_data', '127.0.0.1');
         
         $asesores_esta_web = ['Josselyn Cochachin'];
         $asesor_data = $mydb->get_results("SELECT id, nombre, correo, firma, cargo, odoo_user_id, odoo_partner_id, telefono FROM asesores", ARRAY_A);
         if($asesor_data) { $asesor_data = array_filter($asesor_data, function($item) use ($asesores_esta_web) { return in_array($item['nombre'], $asesores_esta_web); }); }
-        // $asesor = !empty($asesor_data) ? reset($asesor_data) : ['id' => 1, 'nombre' => 'Josselyn Cochachin', 'odoo_user_id' => 1, 'telefono' => '51987146591'];
         $asesor = !empty($asesor_data) ? reset($asesor_data) : ['id' => 1, 'nombre' => 'Josselyn Cochachin', 'odoo_user_id' => 1, 'telefono' => '51901547663'];
 
         $sql = $mydb->prepare("INSERT INTO leads VALUES (
             DEFAULT, %s, %s, %s, NULL, %s, %s, %s, %s, %d, %d, %s, NULL, NULL, %s, %s, %s, NULL, NULL, %f, '0', %s, NULL, %s, NOW(), NULL, '1', '1', '0', '0', '', '', '', '', ''
         )", 
-        $p_nombre, $p_correo, $p_ruc, $p_celular, $p_rol, $p_empleados, $proc_label, $p_cantidad, $p_duracion, $p_tiempo, $p_so, $p_ram_str, $p_almacenamiento, $p_unit_price, $asesor['nombre'], $p_fuente);
+        $p_nombre, $p_correo, $p_ruc, $p_celular, $p_rol, $p_empleados, $proc_label, $p_cantidad, $p_duracion, $p_tiempo, $p_so, $p_ram_str_pdf, $p_almacenamiento_pdf, $p_unit_price, $asesor['nombre'], $p_fuente);
         $mydb->query($sql);
         $ide = $mydb->insert_id;
 
         $pdf_url = 'https://leasein.pe/getpdf/download.php?code=' . urlencode($this->myCrypto('encrypt', (string)$ide));
 
-        // 5. Odoo Payload
+        // 5. Odoo Payload (Enviamos los valores base rígidos para evitar rechazo + la descripcion_odoo)
         $odoo_url = 'https://lease-in.odoo.com/jsonrpc';
         $odoo_user  = 'danielvdml-addons-leasein-master-7160506';
         $odoo_token = 'f8d380f7ec8c20b0e916e8ce4cebe7b684bb4f7a';
@@ -231,10 +233,11 @@ class Cotizador_Ajax {
                         "x_studio_tipo_de_documento" => "RUC", "x_studio_numero_de_documento" => $p_ruc, "partner_name" => "",
                         "user_id" => (int)$asesor['odoo_user_id'], "asesor_phone" => $asesor['telefono'], "numero_empleados" => $p_empleados,
                         "team_id" => 46, "email_cc" => "conversemos@leasein.pe",
-                        "description" => $descripcion_odoo, // ACÁ VIAJAN LAS NOTAS Y ADICIONALES
+                        "description" => $descripcion_odoo, // ACÁ VIAJAN LAS NOTAS Y ADICIONALES PARA MOSTRARSE EN LA PESTAÑA ODOO
                         "x_studio_periodo" => ucfirst($p_tiempo), "x_studio_period_time" => $p_duracion, "x_studio_system" => $p_so,
-                        "x_studio_qty" => $p_cantidad, "x_studio_procesador" => $odoo_proc, "x_studio_ram" => $p_ram_odoo,
-                        "x_studio_storage" => $p_almacenamiento, "x_studio_met_us" => $p_fuente, "x_studio_costo_unit" => $p_unit_price,
+                        "x_studio_qty" => $p_cantidad, "x_studio_procesador" => $odoo_proc, "x_studio_ram" => $p_ram_odoo, // Va el BASE
+                        "x_studio_storage" => $p_almacenamiento_odoo, // Va el BASE
+                        "x_studio_met_us" => $p_fuente, "x_studio_costo_unit" => $p_unit_price,
                         "x_studio_costo_total" => $tarifa_total, "formulario" => false, "lead_canal" => 2, "lead_fuente" => 2, "campaign_id" => 36,
                         "cotizador_hasta_12" => $hasta12, "cotizador_mas_de_12" => $masde12, "leasing_operativo" => false, "url_pdf" => $pdf_url
                     ]

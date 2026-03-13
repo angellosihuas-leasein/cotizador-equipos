@@ -591,6 +591,9 @@
     var procRealName = procData ? procData.label : "Procesador no definido";
     var specsDescription = procRealName + " | 16GB RAM | 512 GB SSD";
 
+	var cuotaLabel = this.state.timeUnit === "semanas" ? "CUOTA TOTAL" : "CUOTA MENSUAL";
+    var costoLaptopLabel = this.state.timeUnit === "semanas" ? "COSTO TOTAL<br> POR LAPTOP*" : "COSTO MENSUAL<br> POR LAPTOP*";	  
+	  
     if (this.state.step === 5 || this.state.step === 3) {
       var procOptions = this.config.processors.map(function(p) {
           return '<option value="' + p.id + '" ' + (p.id === self.state.processorId ? 'selected' : '') + '>' + p.label + '</option>';
@@ -688,13 +691,13 @@ var ramOptions = (this.config.addons?.ram || []).map(function(r) {
               <div class="ceq-layout-right mobile-layout">
                   <div class="ceq-right-card">
                       <div class="ceq-circle">
-                          <span class="ceq-circle-lbl">CUOTA MENSUAL</span>
+                          <span class="ceq-circle-lbl">${cuotaLabel}</span>
                           <span class="ceq-circle-val">${this.config.currency_symbol}${this.formatNumber(Math.round(tPricePerPeriod))}</span>
                           <span class="ceq-circle-sub">${this.config.currency_symbol}${this.formatNumber(Math.round(pBase))} x ${this.state.quantity} ${qtyLabel}</span>
                       </div>
                       <div class="ceq-info-card">
                           <span class="ceq-info-label">SISTEMA OPERATIVO</span>
-                          <span class="ceq-info-title">Viene con <br> <strong>Windows Pro</strong></span>
+                          <span class="ceq-info-title">Viene con <br> <strong>Windows 11 Pro</strong></span>
                           <span class="ceq-info-footer">Precios no incluyen IGV.</span>
                       </div>
                   </div>
@@ -704,13 +707,13 @@ var ramOptions = (this.config.addons?.ram || []).map(function(r) {
             <div class="ceq-layout-right">
                 <div class="ceq-right-card">
                     <div class="ceq-circle">
-                        <span class="ceq-circle-lbl">CUOTA MENSUAL</span>
+                        <span class="ceq-circle-lbl">${cuotaLabel}</span>
                         <span class="ceq-circle-val">${this.config.currency_symbol}${this.formatNumber(Math.round(tPricePerPeriod))}</span>
                         <span class="ceq-circle-sub">${this.config.currency_symbol}${this.formatNumber(Math.round(pBase))} x ${this.state.quantity} ${qtyLabel}</span>
                     </div>
                     <div class="ceq-info-card">
                         <span class="ceq-info-label">SISTEMA OPERATIVO</span>
-                        <span class="ceq-info-title">Viene con <br> <strong>Windows Pro</strong></span>
+                        <span class="ceq-info-title">Viene con <br> <strong>Windows 11 Pro</strong></span>
                         <span class="ceq-info-footer">Precios no incluyen IGV.</span>
                     </div>
                 </div>
@@ -738,7 +741,7 @@ var ramOptions = (this.config.addons?.ram || []).map(function(r) {
         <div class="ceq-step4-container">
             <div class="ceq-step4-top">
                 <div class="ceq-step4-price-circle">
-                    <div class="ceq-s4-lbl">COSTO MENSUAL<br>POR LAPTOP*</div>
+                    <div class="ceq-s4-lbl">${costoLaptopLabel}</div>
                     <div class="ceq-s4-specs" style="color: #fe5000; font-size: 20px; font-weight: 600; text-transform: uppercase; margin-bottom: 10px;">${laptopName}</div>
                     <div class="ceq-s4-price"><span>${this.config.currency_symbol}</span> ${this.formatNumber(Math.round(pBase))}</div>
                     <div class="ceq-s4-disc">*El precio no incluye IGV.</div>
